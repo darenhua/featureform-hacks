@@ -1,5 +1,6 @@
 import { View, Text, Button, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { COLORS } from "./styles/global";
 
 export default function Index() {
   const router = useRouter();
@@ -28,11 +29,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    backgroundColor: COLORS.background,
   },
   title: {
     fontSize: 24,
     marginBottom: 30,
     fontWeight: "bold",
+    color: "white",
   },
   buttonContainer: {
     width: "100%",

@@ -1,6 +1,7 @@
 import { Text, View, TextInput, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import * as DocumentPicker from 'expo-document-picker';
 import { useState } from "react";
+import { COLORS } from "../styles/global";
 
 export default function Index() {
   const [linkedinUrl, setLinkedinUrl] = useState('');
@@ -51,7 +52,7 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     padding: 20,
   },
   formContainer: {
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#333',
+    color: "white",
   },
   input: {
     borderWidth: 1,
@@ -86,6 +87,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    color: "white",
   },
   fileName: {
     fontSize: 14,

@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, Image, StyleSheet, FlatList } from "react-native";
 import { useRouter } from "expo-router";
+import { COLORS } from "../styles/global";
 
 const events = [
   { id: "1", name: "Featureform 2025" },
@@ -46,7 +47,7 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#162955',
+    backgroundColor: COLORS.background,
     paddingTop: 60,
   },
   profileButton: {
