@@ -1,16 +1,17 @@
 import { Link } from "expo-router";
-import { TouchableOpacity, Image, StyleSheet, ViewStyle } from "react-native";
+import { TouchableOpacity, Image, StyleSheet, ViewStyle, ImageSourcePropType } from "react-native";
 
 interface ProfileButtonProps {
-  imageUri: string;
+  imageUri: string | ImageSourcePropType;
   containerStyle?: ViewStyle;
 }
 
 export default function ProfileButton({ imageUri, containerStyle }: ProfileButtonProps) {
+  const source = typeof imageUri === "string" ? { uri: imageUri } : (imageUri as ImageSourcePropType);
   return (
     <Link href="/profile" asChild>
       <TouchableOpacity style={[styles.container, containerStyle]}>
-        <Image source={{ uri: imageUri }} style={styles.image} />
+        <Image source={source} style={styles.image} />
       </TouchableOpacity>
     </Link>
   );
@@ -27,8 +28,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   image: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 30,
   },
 }); 

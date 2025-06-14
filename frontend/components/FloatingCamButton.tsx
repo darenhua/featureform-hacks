@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { View, TouchableOpacity, Text, StyleSheet, Modal } from "react-native";
 import { Camera, CameraView } from "expo-camera";
-import { COLORS } from "../app/styles/global";
+import { Ionicons } from "@expo/vector-icons";
+import { COLORS, FONTS } from "../app/styles/global";
 
 interface FloatingCamButtonProps {
   /**
@@ -32,7 +33,7 @@ export default function FloatingCamButton({ onScan }: FloatingCamButtonProps) {
     <>
       {/* Floating Button */}
       <TouchableOpacity style={styles.fab} onPress={() => setCameraVisible(true)}>
-        <Text style={styles.fabText}>Cam</Text>
+        <Ionicons name="camera" size={24} color={COLORS.background} />
       </TouchableOpacity>
 
       {/* Camera Modal */}
@@ -55,7 +56,7 @@ export default function FloatingCamButton({ onScan }: FloatingCamButtonProps) {
           )}
           {/* Close button */}
           <TouchableOpacity style={styles.closeButton} onPress={() => setCameraVisible(false)}>
-            <Text style={styles.closeText}>Close</Text>
+            <Ionicons name="close" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
       </Modal>
@@ -66,21 +67,16 @@ export default function FloatingCamButton({ onScan }: FloatingCamButtonProps) {
 const styles = StyleSheet.create({
   fab: {
     backgroundColor: "#fff",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  fabText: {
-    color: COLORS.background,
-    fontSize: 20,
-    fontWeight: "bold",
+    shadowRadius: 8,
+    elevation: 8,
   },
   cameraContainer: {
     flex: 1,
@@ -90,34 +86,34 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
-    bottom: 40,
-    alignSelf: "center",
+    top: 60,
+    right: 20,
     backgroundColor: "rgba(0,0,0,0.6)",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  closeText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
   },
   message: {
     color: "#fff",
     fontSize: 16,
+    fontFamily: FONTS.regular,
+    textAlign: "center",
   },
   scanAgainButton: {
     position: "absolute",
     bottom: 100,
     alignSelf: "center",
-    backgroundColor: "rgba(0,0,0,0.6)",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
   },
   scanAgainText: {
-    color: "#fff",
-    fontSize: 18,
+    color: COLORS.background,
+    fontSize: 16,
     fontWeight: "600",
+    fontFamily: FONTS.medium,
   },
 }); 

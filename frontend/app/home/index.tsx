@@ -1,44 +1,71 @@
-import { View, Text, TouchableOpacity, Image, StyleSheet, FlatList } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
-import { COLORS } from "../styles/global";
+import { COLORS, FONTS } from "../styles/global";
+import EventCard from "../../components/EventCard";
+import ProfileButton from "../../components/ProfileButton";
 import FloatingCamButton from "../../components/FloatingCamButton";
+import { mockEvents } from "./mock";
 
-const events = [
-  { id: "1", name: "Featureform 2025" },
-  { id: "2", name: "Networking" },
-  { id: "3", name: "Entrepreneurship Meeting" },
-  { id: "4", name: "Entrepreneurship Meeting" },
-];
-
-export default function Index() {
+export default function Home() {
+  const [events, setEvents] = useState(mockEvents);
   const router = useRouter();
 
-  const renderItem = ({ item }: any) => (
-    <View style={styles.card}>
-      <Text style={styles.cardText}>{item.name}</Text>
-    </View>
-  );
+  useEffect(() => {
+    // You can add any data fetching logic here if needed
+    // For now, we're using the mock data directly
+  }, []);
+
+  const handleEventPress = (eventId: string) => {
+    console.log('Navigating to event:', eventId); // Debug log
+    router.push(`/home/events/${eventId}` as any);
+  };
+
+  // Helper function to chunk events into pairs for rows
+  const chunkEvents = (events: typeof mockEvents, chunkSize: number) => {
+    const chunks = [];
+    for (let i = 0; i < events.length; i += chunkSize) {
+      chunks.push(events.slice(i, i + chunkSize));
+    }
+    return chunks;
+  };
+
+  const eventRows = chunkEvents(events, 2);
 
   return (
     <View style={styles.container}>
-      {/* Profile Button */}
-      <TouchableOpacity style={styles.profileButton} onPress={() => router.push("/profile")}> 
-        <Image
-          source={{ uri: "https://randomuser.me/api/portraits/men/1.jpg" }}
-          style={styles.profileImage}
-        />
-      </TouchableOpacity>
-      {/* Event Grid */}
-      <FlatList
-        data={events}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.grid}
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.logo}>Spark</Text>
+        <ProfileButton imageUri={require("../../assets/images/mock/gene.png")} />
+      </View>
+
+      {/* Events Grid */}
+      <ScrollView 
+        style={styles.gridWrapper}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-      />
+      >
+        {eventRows.map((row, rowIndex) => (
+          <View key={rowIndex} style={styles.row}>
+            {row.map((event) => (
+              <EventCard 
+                key={event.id} 
+                name={event.name} 
+                image={event.image} 
+                onPress={() => handleEventPress(event.id)} 
+              />
+            ))}
+            {/* Add spacer if row has only one event to maintain layout */}
+            {row.length === 1 && <View style={styles.eventSpacer} />}
+          </View>
+        ))}
+      </ScrollView>
+
       {/* Floating Cam Button */}
-      <FloatingCamButton />
+      <View style={styles.fabWrapper}>
+        <FloatingCamButton />
+      </View>
     </View>
   );
 }
@@ -49,44 +76,39 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     paddingTop: 60,
   },
-  profileButton: {
-    position: 'absolute',
-    top: 30,
-    right: 20,
-    zIndex: 10,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 30,
+    paddingTop: 20,
+    paddingHorizontal: 28,
   },
-  profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  logo: {
+    fontSize: 20,
+    fontWeight: "700",
+    fontFamily: FONTS.extraBold,
+    color: COLORS.accent,
   },
-  grid: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 40,
-    paddingBottom: 100,
+  gridWrapper: {
+    flex: 1,
+    paddingHorizontal: 16,
   },
-  card: {
-    backgroundColor: '#253A6D',
-    borderRadius: 20,
-    width: 150,
-    height: 150,
-    margin: 12,
-    justifyContent: 'flex-end',
-    alignItems: 'flex-start',
-    padding: 16,
+  scrollContent: {
+    paddingTop: 20,
+    paddingBottom: 120,
   },
-  cardText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 40,
+  },
+  eventSpacer: {
+    width: 160, // Same width as EventCard to maintain spacing
+  },
+  fabWrapper: {
+    position: "absolute",
+    bottom: 50,
+    alignSelf: "center",
   },
 });
