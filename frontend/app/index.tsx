@@ -1,10 +1,12 @@
 import { Text, View, TextInput, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import * as DocumentPicker from 'expo-document-picker';
 import { useState } from "react";
+import { useRouter } from 'expo-router';
 
 export default function Index() {
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [resumeFile, setResumeFile] = useState<DocumentPicker.DocumentPickerResult | null>(null);
+  const router = useRouter();
 
   const pickResume = async () => {
     try {
@@ -44,6 +46,12 @@ export default function Index() {
           <Text style={styles.fileName}>{resumeFile.assets[0].name}</Text>
         )}
       </View>
+      <TouchableOpacity
+        style={styles.linkButton}
+        onPress={() => router.push('/newpage')}
+      >
+        <Text style={styles.linkButtonText}>Go to QR SCANNER Page</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -91,5 +99,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 5,
+  },
+  linkButton: {
+    marginTop: 40,
+    alignSelf: 'center',
+    padding: 12,
+  },
+  linkButtonText: {
+    color: '#007AFF',
+    fontSize: 16,
+    textDecorationLine: 'underline',
   },
 });
