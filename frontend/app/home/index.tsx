@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, Image, StyleSheet, FlatList } from "react-native";
 import { useRouter } from "expo-router";
 import { COLORS } from "../styles/global";
+import FloatingCamButton from "../../components/FloatingCamButton";
 
 const events = [
   { id: "1", name: "Featureform 2025" },
@@ -37,9 +38,7 @@ export default function Index() {
         showsVerticalScrollIndicator={false}
       />
       {/* Floating Cam Button */}
-      <TouchableOpacity style={styles.fab}>
-        <Text style={styles.fabText}>Cam</Text>
-      </TouchableOpacity>
+      <FloatingCamButton />
     </View>
   );
 }
@@ -89,26 +88,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 30,
-    alignSelf: 'center',
-    backgroundColor: '#fff',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  fabText: {
-    color: '#162955',
-    fontSize: 20,
-    fontWeight: 'bold',
   },
 });
