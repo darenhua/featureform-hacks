@@ -24,8 +24,6 @@ export default function routes(app) {
   app.post("/api/event", createEvent);
   app.get("/api/event", getAllEvents);
   app.get("/api/event/:id", getEventById);
-  
-  app.delete("/api/event/:id", deleteEventById);
 
   // User routes
   app.post("/api/user", createUser);
