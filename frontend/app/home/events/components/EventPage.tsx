@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { COLORS, FONTS } from "../../../styles/global";
 import EventPageHeader from "./EventPageHeader";
 import EventCard from "./EventCard";
 import ProfileCard from "./ProfileCard";
 import PeopleSection from "./PeopleSection";
-import { mockPeople } from "../../mock-people";
 import { Event } from "../../../api/events";
+import { getAllUsers, User } from "../../../api/users";
+import { getVendorId } from "../../../../helper";
 
 interface EventPageProps {
   event?: Event;
@@ -15,6 +16,48 @@ interface EventPageProps {
 }
 
 export default function EventPage({ event, isLoading, error }: EventPageProps) {
+  const [users, setUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [usersError, setUsersError] = useState<string | null>(null);
+  const [currentUserIdfv, setCurrentUserIdfv] = useState<string | null>(null);
+
+  useEffect(() => {
+    getCurrentUserIdfv();
+    fetchUsers();
+  }, []);
+
+  const getCurrentUserIdfv = async () => {
+    try {
+      const idfv = await getVendorId();
+      setCurrentUserIdfv(idfv);
+      console.log('Current user IDFV for filtering:', idfv);
+    } catch (error) {
+      console.error('Failed to get current user IDFV:', error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      setUsersLoading(true);
+      const response = await getAllUsers();
+      // Filter users that have been processed (completed onboarding)
+      const processedUsers = response.users.filter(user => user.processed === true);
+      setUsers(processedUsers);
+      console.log(`Fetched ${processedUsers.length} processed users for event page`);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      setUsersError('Failed to load users');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  // Filter out current user from the list
+  const getFilteredUsers = () => {
+    if (!currentUserIdfv) return users;
+    return users.filter(user => user.idfv !== currentUserIdfv);
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -61,6 +104,8 @@ export default function EventPage({ event, isLoading, error }: EventPageProps) {
     { name: "Product Design", count: 4 }
   ];
 
+  const filteredUsers = getFilteredUsers();
+
   return (
     <View style={styles.container}>
       <EventPageHeader />
@@ -83,25 +128,41 @@ export default function EventPage({ event, isLoading, error }: EventPageProps) {
         {/* Spark it up Section */}
         <View style={styles.sparkSection}>
           <Text style={styles.sectionTitle}>Spark it up!</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.profileScrollContent}
-            style={styles.profileScrollContainer}
-          >
-            {mockPeople.map((person, index) => (
-              <View key={person.id} style={styles.profileCardWrapper}>
-                <ProfileCard
-                  name={person.name}
-                  image={person.image}
-                  interests={person.interests}
-                  colorIndex={index}
-                  userId={person.userId}
-                  eventId={event.id}
-                />
-              </View>
-            ))}
-          </ScrollView>
+          {usersLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={COLORS.accent} />
+              <Text style={styles.loadingText}>Loading users...</Text>
+            </View>
+          ) : usersError ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>Error loading users</Text>
+              <Text style={styles.errorSubtext}>{usersError}</Text>
+            </View>
+          ) : filteredUsers.length === 0 ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>No other users available</Text>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.profileScrollContent}
+              style={styles.profileScrollContainer}
+            >
+              {filteredUsers.slice(0, 10).map((user, index) => (
+                <View key={user.id} style={styles.profileCardWrapper}>
+                  <ProfileCard
+                    name={`${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User'}
+                    image={user.image_url || "https://randomuser.me/api/portraits/men/7.jpg"}
+                    interests={user.interests || []}
+                    colorIndex={index}
+                    userId={user.id}
+                    eventId={event.id}
+                  />
+                </View>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* People Section */}
@@ -109,6 +170,7 @@ export default function EventPage({ event, isLoading, error }: EventPageProps) {
           title="People"
           categories={peopleCategories}
           eventId={event.id}
+          currentUserIdfv={currentUserIdfv}
         />
       </ScrollView>
     </View>
@@ -168,5 +230,16 @@ const styles = StyleSheet.create({
     color: COLORS.subtext,
     textAlign: 'center',
     lineHeight: 22,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 28,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.subtext,
+    marginTop: 12,
   },
 }); 

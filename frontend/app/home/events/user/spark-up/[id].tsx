@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   View, 
   Text, 
@@ -12,9 +12,10 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Audio } from 'expo-av';
 import { COLORS, FONTS } from "../../../../styles/global";
 import { mockPeople } from "../../../mock-people";
-import axios from "axios";
 import Constants from "expo-constants";
 import { getVendorId } from "../../../../../helper";
+import { getUserByIdfv, getUserById, User } from "../../../../api/users";
+import { startConversation, continueConversation } from "../../../../api/conversation";
 
 interface ConversationResponse {
   summary?: string;
@@ -38,10 +39,16 @@ export default function SparkUpConversationPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [conversationBubbles, setConversationBubbles] = useState<ConversationBubble[]>([]);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [currentUserIdfv, setCurrentUserIdfv] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [conversationGroupId, setConversationGroupId] = useState<number | null>(null);
+  const [conversationStarted, setConversationStarted] = useState(false);
   
+  // Ref to track if initialization is in progress
+  const initializingRef = useRef(false);
   let durationInterval: NodeJS.Timeout;
 
   useEffect(() => {
@@ -55,13 +62,44 @@ export default function SparkUpConversationPage() {
     };
   }, []);
 
+  // Start conversation when both users are loaded
+  useEffect(() => {
+    console.log('useEffect triggered - checking conversation initialization');
+    console.log('currentUser:', !!currentUser);
+    console.log('user:', !!user);
+    console.log('currentUserId:', currentUserId);
+    console.log('conversationStarted:', conversationStarted);
+    console.log('conversationGroupId:', conversationGroupId);
+    console.log('initializingRef.current:', initializingRef.current);
+    
+    if (currentUser && user && currentUserId && !conversationStarted && !conversationGroupId && !initializingRef.current) {
+      console.log('All conditions met, initializing conversation...');
+      initializeConversation();
+    } else {
+      console.log('Conditions not met for conversation initialization');
+    }
+  }, [currentUser?.id, user?.id, currentUserId]); // Only depend on IDs, not full objects
+
   const getCurrentUserIdfv = async () => {
     try {
       const idfv = await getVendorId();
       setCurrentUserIdfv(idfv);
       console.log('Current user IDFV:', idfv);
+      
+      // Get the actual user ID by looking up the IDFV
+      if (idfv) {
+        const currentUserData = await getUserByIdfv(idfv);
+        if (currentUserData) {
+          setCurrentUserId(currentUserData.id);
+          setCurrentUser(currentUserData);
+          console.log('Current user ID:', currentUserData.id);
+          console.log('Current user data loaded');
+        } else {
+          console.log('Current user not found in database');
+        }
+      }
     } catch (error) {
-      console.error('Failed to get current user IDFV:', error);
+      console.error('Failed to get current user IDFV/ID:', error);
     }
   };
 
@@ -85,67 +123,157 @@ export default function SparkUpConversationPage() {
   };
 
   const fetchUser = async () => {
-    setUserLoading(true);
+    if (!id || typeof id !== 'string') {
+      setUserLoading(false);
+      return;
+    }
+
     try {
-      // First try to get from backend API
-      const response = await axios.get(`${NODE_URL}/user/${id}`);
-      setUser(response.data.user);
+      setUserLoading(true);
+      // Try to get from backend API using getUserById
+      const response = await getUserById(id);
+      setUser(response.user);
+      console.log('Spark-up user fetched from API:', response.user?.id);
     } catch (error) {
-      // Fallback to mock data
+      // Fallback to mock data if API fails
       console.log('API failed, using mock data for spark-up user:', id);
       const mockUser = mockPeople.find(person => person.userId === id || person.id === id);
       if (mockUser) {
-        setUser({
+        // Transform mock user to match User interface
+        const transformedUser: User = {
           id: mockUser.id,
-          userId: mockUser.userId,
-          name: mockUser.name,
+          idfv: mockUser.userId, // Use userId as idfv for mock data
           firstName: mockUser.name.split(' ')[0],
           lastName: mockUser.name.split(' ').slice(1).join(' '),
-          image: mockUser.image,
-          bio: mockUser.bio,
+          image_url: mockUser.image,
+          long_description: mockUser.bio,
           interests: mockUser.interests,
-          workHistory: mockUser.workHistory
-        });
+          work_history: mockUser.workHistory
+        };
+        setUser(transformedUser);
+        console.log('Using mock user for spark-up:', transformedUser.id);
       } else {
         setUser(null);
+        console.log('No user found for ID:', id);
       }
     } finally {
       setUserLoading(false);
     }
   };
 
+  const initializeConversation = async () => {
+    // Add multiple guards to prevent duplicate calls
+    if (!currentUser || !user || !eventId) {
+      console.log('Missing required data for conversation initialization');
+      return;
+    }
+
+    if (conversationStarted || conversationGroupId || initializingRef.current) {
+      console.log('Conversation already started, in progress, or currently initializing');
+      return;
+    }
+
+    try {
+      console.log('=== STARTING CONVERSATION INITIALIZATION ===');
+      console.log('Current user ID:', currentUser.id);
+      console.log('Other user ID:', user.id);
+      console.log('Event ID:', eventId);
+      
+      // Set flags immediately to prevent duplicate calls
+      initializingRef.current = true;
+      setConversationStarted(true);
+
+      const startData = {
+        person1Id: parseInt(currentUser.id),
+        person2Id: parseInt(user.id),
+        eventId: parseInt(eventId as string),
+        dump1: currentUser.long_description || currentUser.short_description || 'No description available',
+        dump2: user.long_description || user.short_description || 'No description available'
+      };
+
+      console.log('Calling startConversation API with data:', startData);
+      const response = await startConversation(startData);
+      setConversationGroupId(response.conversation_group_id);
+      console.log('=== CONVERSATION STARTED SUCCESSFULLY ===');
+      console.log('Conversation group ID:', response.conversation_group_id);
+    } catch (error) {
+      console.error('=== CONVERSATION START FAILED ===');
+      console.error('Error details:', error);
+      
+      // Reset flags on error so user can try again
+      setConversationStarted(false);
+      setConversationGroupId(null);
+      
+      // Show alert but don't spam it
+      Alert.alert('Notice', 'Conversation API unavailable, continuing in offline mode');
+    } finally {
+      // Always reset the ref flag
+      initializingRef.current = false;
+    }
+  };
+
   const sendTranscriptionToEndpoint = async (transcription: string) => {
     try {
-      // Use actual IDs from context
-      const payload = {
-        person1Idfv: currentUserIdfv || "unknown-current-user",
-        person2Idfv: user?.userId || user?.id || user?.idfv || "unknown-other-user",
-        eventId: eventId || "unknown-event-id",
-        transcription: transcription
-      };
-      
-      console.log('Sending transcription to endpoint:');
-      console.log('====================================');
-      console.log(JSON.stringify(payload, null, 2));
-      console.log('====================================');
-      
-      // TODO: Uncomment when endpoint is ready
-      // const response = await axios.post(`${NODE_URL}/api/conversation/transcription`, payload);
-      // return response.data;
-      
-      // Mock response for now
+      if (conversationGroupId) {
+        // Use the conversation API
+        console.log('Sending transcription to conversation API...');
+        const response = await continueConversation({
+          conversation_group_id: conversationGroupId,
+          transcript: transcription
+        });
+        
+        // Parse topics from string to array if needed
+        let topics: string[] = [];
+        const rawTopics = response.new_topics || response.nextTopics;
+        
+        if (rawTopics) {
+          if (typeof rawTopics === 'string') {
+            // Split by bullet points, numbered lists, or line breaks
+            topics = rawTopics
+              .split(/\n|•|\d+\.|-/g)
+              .map((topic: string) => topic.trim())
+              .filter((topic: string) => topic.length > 0);
+          } else if (Array.isArray(rawTopics)) {
+            topics = rawTopics;
+          }
+        }
+        
+        // Fallback if no topics or parsing failed
+        if (topics.length === 0) {
+          topics = [
+            "Tell me more about your experience with that",
+            "What challenges did you face?",
+            "How did that make you feel?"
+          ];
+        }
+        
+        return {
+          summary: response.snippet_summary || response.summary || 'Conversation processed',
+          nextTopics: topics
+        };
+      } else {
+        // Fallback to mock response
+        console.log('No conversation group ID, using mock response');
+        return {
+          summary: `You discussed: ${transcription.substring(0, 100)}${transcription.length > 100 ? '...' : ''}`,
+          nextTopics: [
+            "Tell me more about your experience with that",
+            "What challenges did you face?",
+            "How did that make you feel?"
+          ]
+        };
+      }
+    } catch (error) {
+      console.error('Error sending transcription:', error);
+      // Return mock response on error
       return {
-        summary: transcription, // Show full transcription as summary
+        summary: `You discussed: ${transcription.substring(0, 100)}${transcription.length > 100 ? '...' : ''}`,
         nextTopics: [
           "Tell me more about your experience with that",
           "What challenges did you face?",
           "How did that make you feel?"
         ]
       };
-      
-    } catch (error) {
-      console.error('Error sending transcription:', error);
-      throw error;
     }
   };
 
@@ -229,7 +357,7 @@ export default function SparkUpConversationPage() {
       console.log(transcribedText);
       console.log('==================');
       
-      // Send transcription to endpoint and get response
+      // Send transcription to conversation API
       const response = await sendTranscriptionToEndpoint(transcribedText);
       
       // Add new conversation bubble
@@ -253,7 +381,7 @@ export default function SparkUpConversationPage() {
       
       const newBubble: ConversationBubble = {
         id: Date.now(),
-        summary: response.summary || 'Conversation recorded',
+        summary: response.summary || 'Simulated conversation summary - this would be an AI-generated summary of your discussion',
         nextTopics: response.nextTopics || []
       };
       
@@ -288,6 +416,11 @@ export default function SparkUpConversationPage() {
     );
   }
 
+  // Get display name from user data
+  const displayName = user.firstName && user.lastName 
+    ? `${user.firstName} ${user.lastName}`
+    : (user as any).name || 'User'; // Fallback for mock data
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -295,11 +428,25 @@ export default function SparkUpConversationPage() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Conversation with {user.name || `${user.firstName} ${user.lastName}`}</Text>
+        <Text style={styles.headerTitle}>Conversation with {displayName}</Text>
       </View>
 
       {/* Main Content */}
       <View style={styles.content}>
+        
+        {/* Conversation Status */}
+        {!conversationStarted && (
+          <View style={styles.statusContainer}>
+            <ActivityIndicator size="small" color={COLORS.accent} />
+            <Text style={styles.statusText}>Initializing conversation...</Text>
+          </View>
+        )}
+
+        {conversationGroupId && (
+          <View style={styles.statusContainer}>
+            <Text style={styles.statusText}>Conversation ID: {conversationGroupId.toString().substring(0, 8)}...</Text>
+          </View>
+        )}
         
         {/* Conversation Bubbles */}
         <ScrollView style={styles.conversationArea} showsVerticalScrollIndicator={false}>
@@ -391,6 +538,22 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 28,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  statusText: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.accent,
+    marginLeft: 8,
   },
   conversationArea: {
     flex: 1,

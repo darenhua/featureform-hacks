@@ -2,56 +2,63 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { COLORS, FONTS } from "../../../styles/global";
-import axios from "axios";
-import Constants from "expo-constants";
+import { getUserById, User } from "../../../api/users";
 import { mockPeople } from "../../mock-people";
-
-const NODE_URL = Constants.expoConfig?.extra?.NODE_URL;
 
 export default function UserProfilePage() {
   const { id, eventId } = useLocalSearchParams();
   const router = useRouter();
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    
-    // First try to get from backend API
-    axios
-      .get(`${NODE_URL}/user/${id}`)
-      .then((response) => {
-        setUser(response.data.user);
-      })
-      .catch(() => {
-        // Fallback to mock data if API fails
-        console.log('API failed, using mock data for user:', id);
-        const mockUser = mockPeople.find(person => person.id === id || person.userId === id);
-        if (mockUser) {
-          // Transform mock user to match expected format
-          setUser({
-            id: mockUser.id,
-            userId: mockUser.userId,
-            firstName: mockUser.name.split(' ')[0],
-            lastName: mockUser.name.split(' ').slice(1).join(' '),
-            image: mockUser.image,
-            bio: mockUser.bio,
-            interests: mockUser.interests,
-            workHistory: mockUser.workHistory
-          });
-        } else {
-          setUser(null);
-        }
-      })
-      .finally(() => setLoading(false));
-
+    fetchUser();
   }, [id]);
+
+  const fetchUser = async () => {
+    if (!id || typeof id !== 'string') {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // Try to get from backend API using the getUserById function
+      const response = await getUserById(id);
+      setUser(response.user);
+      console.log('User fetched from API:', response.user);
+    } catch (error) {
+      // Fallback to mock data if API fails
+      console.log('API failed, using mock data for user:', id);
+      const mockUser = mockPeople.find(person => person.id === id || person.userId === id);
+      if (mockUser) {
+        // Transform mock user to match expected format
+        setUser({
+          id: mockUser.id,
+          idfv: mockUser.userId, // Use userId as idfv for mock data
+          firstName: mockUser.name.split(' ')[0],
+          lastName: mockUser.name.split(' ').slice(1).join(' '),
+          image_url: mockUser.image,
+          long_description: mockUser.bio,
+          interests: mockUser.interests,
+          work_history: mockUser.workHistory
+        } as User);
+      } else {
+        setUser(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color={COLORS.maintext} />
+        <View style={styles.errorContainer}>
+          <ActivityIndicator size="large" color={COLORS.maintext} />
+          <Text style={styles.loadingText}>Loading user...</Text>
+        </View>
       </View>
     );
   }
@@ -67,8 +74,8 @@ export default function UserProfilePage() {
   }
 
   const handleSparkUp = () => {
-    // Use userId for spark-up navigation (matches mock data structure)
-    const sparkId = user.userId || user.id;
+    // Use the actual user ID for spark-up navigation
+    const sparkId = user.id;
     const url = eventId 
       ? `/home/events/user/spark-up/${sparkId}?eventId=${eventId}`
       : `/home/events/user/spark-up/${sparkId}`;
@@ -95,10 +102,19 @@ export default function UserProfilePage() {
       >
         {/* Profile Section */}
         <View style={styles.profileSection}>
-          <Image source={{ uri: user.image || "https://randomuser.me/api/portraits/men/7.jpg" }} style={styles.profileImage} />
+          <Image 
+            source={{ 
+              uri: user.image_url || "https://randomuser.me/api/portraits/men/7.jpg" 
+            }} 
+            style={styles.profileImage} 
+          />
           <View style={styles.profileInfo}>
-            <Text style={styles.userName}>{`${user.firstName} ${user.lastName}`}</Text>
-            <Text style={styles.userBio}>{user.bio || user.description}</Text>
+            <Text style={styles.userName}>
+              {`${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User'}
+            </Text>
+            <Text style={styles.userBio}>
+              {user.short_description || 'No bio available'}
+            </Text>
             <TouchableOpacity style={styles.sparkButton} onPress={handleSparkUp}>
               <Text style={styles.sparkButtonText}>Spark up!</Text>
             </TouchableOpacity>
@@ -106,24 +122,31 @@ export default function UserProfilePage() {
         </View>
 
         {/* Work History Section */}
-        {user.work_history && (
+        {user.work_history && Array.isArray(user.work_history) && user.work_history.length > 0 && (
           <View style={styles.workSection}>
             <Text style={styles.sectionTitle}>Work History</Text>
             {user.work_history.map((work: any, index: number) => (
               <View key={index} style={styles.workItem}>
                 <View style={styles.workHeader}>
-                  <Text style={styles.workTitle}>{work.title}</Text>
-                  <Text style={styles.workDuration}>{work.duration}</Text>
+                  <Text style={styles.workTitle}>{work.title || 'Position'}</Text>
+                  <Text style={styles.workDuration}>
+                    {work.start_date && work.end_date 
+                      ? `${work.start_date} - ${work.end_date}`
+                      : work.duration || 'Duration not specified'
+                    }
+                  </Text>
                 </View>
-                <Text style={styles.workCompany}>{work.company}</Text>
-                <Text style={styles.workDescription}>{work.description}</Text>
+                <Text style={styles.workCompany}>{work.company || 'Company'}</Text>
+                <Text style={styles.workDescription}>
+                  {work.description || 'No description available'}
+                </Text>
               </View>
             ))}
           </View>
         )}
 
         {/* Interests Section */}
-        {user.interests && (
+        {user.interests && Array.isArray(user.interests) && user.interests.length > 0 && (
           <View style={styles.interestsSection}>
             <Text style={styles.sectionTitle}>Interests & Skills</Text>
             <View style={styles.interestsList}>
@@ -276,5 +299,11 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
     color: COLORS.maintext,
     textAlign: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.subtext,
+    marginTop: 12,
   },
 });

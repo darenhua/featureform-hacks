@@ -67,11 +67,30 @@ export async function getAllUsers(req, res) {
 // Get a user by id
 export async function getUserById(req, res) {
   try {
-    const { idfv } = req.params;
+    const { id } = req.params;
     const { data, error } = await supabase
       .from("user")
       .select("*")
       .eq("id", id)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    return res.status(200).json({ user: data });
+  } catch (error) {
+    return res.status(500).json({ error: "Server error" });
+  }
+}
+
+// Get a user by IDFV
+export async function getUserByIdfv(req, res) {
+  try {
+    const { idfv } = req.params;
+    const { data, error } = await supabase
+      .from("user")
+      .select("*")
+      .eq("idfv", idfv)
       .single();
 
     if (error || !data) {
