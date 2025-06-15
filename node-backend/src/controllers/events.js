@@ -3,7 +3,7 @@ import { supabase } from "../../index.js";
 // Create an event in Supabase
 export async function createEvent(req, res) {
   try {
-    const { name, date, location, description } = req.body;
+    const { name, location, date, time, description, image_url } = req.body;
 
     if (!name || !date || !location) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -11,14 +11,13 @@ export async function createEvent(req, res) {
 
     const { data, error } = await supabase
       .from("event")
-      .insert([{ name, date, location, description: description || "" }])
+      .insert([{ name, location, date, time, description: description || "", image_url: image_url || "" }])
       .select()
       .single();
 
     if (error) {
       return res.status(500).json({ error: error.message });
     }
-
     return res.status(201).json({ message: "Event created", event: data });
   } catch (error) {
     return res.status(500).json({ error: "Server error" });

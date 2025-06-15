@@ -149,7 +149,7 @@ export default function Index() {
           onPress={handleSubmit}
           disabled={isSubmitting}
         >
-          <Text style={styles.submitButtonText}>
+          <Text style={styles.submitButtonText} >
             {isSubmitting ? 'Submitting...' : 'Submit'}
           </Text>
         </TouchableOpacity>

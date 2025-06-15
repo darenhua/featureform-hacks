@@ -1,28 +1,41 @@
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { COLORS, FONTS } from "../styles/global";
 import EventCard from "../../components/EventCard";
 import ProfileButton from "../../components/ProfileButton";
 import FloatingCamButton from "../../components/FloatingCamButton";
-import { mockEvents } from "./mock";
+import { getAllEvents, Event } from "../api/events";
 
 export default function Home() {
-  const [events, setEvents] = useState(mockEvents);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    // You can add any data fetching logic here if needed
-    // For now, we're using the mock data directly
+    const fetchEvents = async () => {
+      try {
+        const response = await getAllEvents();
+        setEvents(response.events || []);
+      } catch (err) {
+        console.error('Error fetching events:', err);
+        setError('Failed to load events');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
   }, []);
 
   const handleEventPress = (eventId: string) => {
-    console.log('Navigating to event:', eventId); // Debug log
+    console.log('Navigating to event:', eventId);
     router.push(`/home/events/${eventId}` as any);
   };
 
   // Helper function to chunk events into pairs for rows
-  const chunkEvents = (events: typeof mockEvents, chunkSize: number) => {
+  const chunkEvents = (events: Event[], chunkSize: number) => {
     const chunks = [];
     for (let i = 0; i < events.length; i += chunkSize) {
       chunks.push(events.slice(i, i + chunkSize));
@@ -31,6 +44,22 @@ export default function Home() {
   };
 
   const eventRows = chunkEvents(events, 2);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={COLORS.accent} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -43,23 +72,30 @@ export default function Home() {
       {/* Events Grid */}
       <ScrollView 
         style={styles.gridWrapper}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          events.length === 0 && styles.centerContent
+        ]}
         showsVerticalScrollIndicator={false}
       >
-        {eventRows.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.row}>
-            {row.map((event) => (
-              <EventCard 
-                key={event.id} 
-                name={event.name} 
-                image={event.image} 
-                onPress={() => handleEventPress(event.id)} 
-              />
-            ))}
-            {/* Add spacer if row has only one event to maintain layout */}
-            {row.length === 1 && <View style={styles.eventSpacer} />}
-          </View>
-        ))}
+        {events.length === 0 ? (
+          <Text style={styles.noEventsText}>No events found</Text>
+        ) : (
+          eventRows.map((row, rowIndex) => (
+            <View key={rowIndex} style={styles.row}>
+              {row.map((event) => (
+                <EventCard 
+                  key={event.id} 
+                  name={event.name} 
+                  image={event.image_url ? { uri: event.image_url } : require("../../assets/images/mock/screenshot1.png")}
+                  onPress={() => handleEventPress(event.id)} 
+                />
+              ))}
+              {/* Add spacer if row has only one event to maintain layout */}
+              {row.length === 1 && <View style={styles.eventSpacer} />}
+            </View>
+          ))
+        )}
       </ScrollView>
 
       {/* Floating Cam Button */}
@@ -110,5 +146,22 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 50,
     alignSelf: "center",
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorText: {
+    color: COLORS.accent,
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    textAlign: "center",
+  },
+  noEventsText: {
+    color: COLORS.subtext,
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    textAlign: "center",
   },
 });

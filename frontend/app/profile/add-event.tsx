@@ -10,15 +10,18 @@ import {
 } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { COLORS, FONTS } from "../styles/global";
+import { createEvent, EventFormData } from "../api/events";
 
 export default function AddEventPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<EventFormData>({
     name: "",
     location: "",
     date: "",
     time: "",
     description: "",
+    image_url: "",
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -28,7 +31,7 @@ export default function AddEventPage() {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validate form
     if (!formData.name.trim()) {
       Alert.alert("Error", "Please enter an event name");
@@ -51,19 +54,30 @@ export default function AddEventPage() {
       return;
     }
 
-    // Here you would normally save the event to your backend/database
-    console.log("Event data:", formData);
+    setIsLoading(true);
     
-    Alert.alert(
-      "Success", 
-      "Event created successfully!",
-      [
-        {
-          text: "OK",
-          onPress: () => router.back()
-        }
-      ]
-    );
+    try {
+      await createEvent(formData);
+      
+      Alert.alert(
+        "Success", 
+        "Event created successfully!",
+        [
+          {
+            text: "OK",
+            onPress: () => router.back()
+          }
+        ]
+      );
+    } catch (error) {
+      console.error("Error creating event:", error);
+      Alert.alert(
+        "Error", 
+        "Failed to create event. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -78,9 +92,7 @@ export default function AddEventPage() {
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Add Event</Text>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
-          <Text style={styles.saveText}>Save</Text>
-        </TouchableOpacity>
+        <View style={styles.saveButton} />
       </View>
 
       <ScrollView 
@@ -151,9 +163,29 @@ export default function AddEventPage() {
           />
         </View>
 
+        {/* Image URL */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Image URL</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.image_url}
+            onChangeText={(value) => handleInputChange('image_url', value)}
+            placeholder="Enter image URL"
+            placeholderTextColor={COLORS.subtext}
+            keyboardType="url"
+            autoCapitalize="none"
+          />
+        </View>
+
         {/* Create Event Button */}
-        <TouchableOpacity style={styles.createButton} onPress={handleSubmit}>
-          <Text style={styles.createButtonText}>Create Event</Text>
+        <TouchableOpacity 
+          style={[styles.createButton, isLoading && styles.createButtonDisabled]} 
+          onPress={handleSubmit}
+          disabled={isLoading}
+        >
+          <Text style={styles.createButtonText}>
+            {isLoading ? "Creating Event..." : "Create Event"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -241,5 +273,8 @@ const styles = StyleSheet.create({
     color: COLORS.maintext,
     fontSize: 18,
     fontFamily: FONTS.bold,
+  },
+  createButtonDisabled: {
+    opacity: 0.6,
   },
 }); 
