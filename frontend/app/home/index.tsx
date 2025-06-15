@@ -49,7 +49,7 @@ export default function Home() {
         // Join the event by adding user to the users array
         axios({
           method: "post",
-          url: `${NODE_URL}/${eventId}/${vendorId}`,
+          url: `${NODE_URL}/event/${eventId}/${vendorId}`,
         })
           .then((response) => {
             console.log(response.data)
