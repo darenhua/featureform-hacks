@@ -1,9 +1,13 @@
+import os
 from openai import OpenAI
+from dotenv import load_dotenv
 
-openai_key = "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"
+load_dotenv()
+
+openai_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key=openai_key,  # Replace with your OpenAI API key
+    api_key=openai_key,  # Loaded from .env
 )
 
 person1 = "Maya Thompson is a 20-year-old junior at a liberal arts college in Vermont, majoring in Political Science with a minor in Sociology. Originally from Atlanta, Georgia, she is a first-generation college student and bilingual in English and Spanish. Maya works part-time as an assistant in the campus civic engagement office, where she helps coordinate voter outreach events and student education initiatives. Her academic and extracurricular interests include political theory, voter rights advocacy, and debate, and she’s an active member of both the campus debate team and a student-led voter registration coalition. In her free time, she enjoys reading nonfiction, listening to political podcasts, and writing opinion blogs focused on social equity. She plans to pursue a career as a policy analyst or community organizer in civic education."

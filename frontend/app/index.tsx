@@ -11,7 +11,6 @@ export default function Index() {
     console.log(getVendorId());
 
     axios
-      // .get(`http://10.81.25.52:3000`)
       .get("https://featureform-hacks.onrender.com")
       .then((response) => console.log(response.data))
       .catch((error) => console.error("Error fetching data:", error));
