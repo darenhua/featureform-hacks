@@ -7,6 +7,10 @@ import ProfileButton from "../../components/ProfileButton";
 import FloatingCamButton from "../../components/FloatingCamButton";
 import { getAllEvents, joinEvent, Event } from "../api/events";
 import { getVendorId } from "../../helper";
+import axios from "axios";
+import Constants from "expo-constants";
+const NODE_URL = Constants.expoConfig?.extra?.NODE_URL
+
 
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -35,10 +39,13 @@ export default function Home() {
     try {
       // Get the vendor ID from the device --> This is out way of identifying the user
       const vendorId = await getVendorId();
-      
+
       if (vendorId) {
         // Join the event by adding user to the users array
-        await joinEvent(eventId, vendorId);
+        axios({
+          method: 'post',
+          url: `${NODE_URL}/event/${eventId}/${vendorId}`,
+        }).then((response) => console.log(response.data)).catch((error) => console.log(error));
         console.log('User joined event:', eventId);
       } else {
         console.warn('Could not get vendor ID');
@@ -47,7 +54,7 @@ export default function Home() {
       console.error('Error joining event:', error);
       // Continue to navigate even if join fails
     }
-    
+
     // Navigate to the event page
     console.log('Navigating to event:', eventId);
     router.push(`/home/events/${eventId}` as any);
@@ -89,7 +96,7 @@ export default function Home() {
       </View>
 
       {/* Events Grid */}
-      <ScrollView 
+      <ScrollView
         style={styles.gridWrapper}
         contentContainerStyle={[
           styles.scrollContent,
@@ -103,11 +110,11 @@ export default function Home() {
           eventRows.map((row, rowIndex) => (
             <View key={rowIndex} style={styles.row}>
               {row.map((event) => (
-                <EventCard 
-                  key={event.id} 
-                  name={event.name} 
+                <EventCard
+                  key={event.id}
+                  name={event.name}
                   image={event.image_url ? { uri: event.image_url } : require("../../assets/images/mock/screenshot1.png")}
-                  onPress={() => handleEventPress(event.id)} 
+                  onPress={() => handleEventPress(event.id)}
                 />
               ))}
               {/* Add spacer if row has only one event to maintain layout */}

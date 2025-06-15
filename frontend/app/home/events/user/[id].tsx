@@ -67,7 +67,7 @@ export default function UserProfilePage() {
         <View style={styles.profileSection}>
           <Image source={{ uri: user.image || "https://randomuser.me/api/portraits/men/7.jpg" }} style={styles.profileImage} />
           <View style={styles.profileInfo}>
-            <Text style={styles.userName}>`${user.firstName} ${user.lastName}`}</Text>
+            <Text style={styles.userName}>{`${user.firstName} ${user.lastName}`}</Text>
             <Text style={styles.userBio}>{user.bio || user.description}</Text>
             <TouchableOpacity style={styles.sparkButton} onPress={handleSparkUp}>
               <Text style={styles.sparkButtonText}>Spark up!</Text>
