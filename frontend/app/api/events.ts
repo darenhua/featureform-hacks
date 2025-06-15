@@ -33,8 +33,8 @@ export async function getEventById(id: string) {
 }
 
 export async function joinEvent(eventId: string, userId: string) {
-    const response = await axios.post(`${NODE_URL}/event/${eventId}/join`, {
-        user_id: userId
-    });
-    return response.data;
+  const response = await axios.post(`${NODE_URL}/event/${eventId}/join`, {
+    user_id: userId,
+  });
+  return response.data;
 }
