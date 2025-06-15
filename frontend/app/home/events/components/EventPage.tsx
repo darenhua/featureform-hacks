@@ -65,13 +65,13 @@ export default function EventPage({ event, isLoading, error }: EventPageProps) {
     <View style={styles.container}>
       <EventPageHeader />
 
-      <ScrollView 
+      <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Event Card */}
-        <EventCard 
+        <EventCard
           name={event.name}
           image={event.image_url ? { uri: event.image_url } : require("../../../../assets/images/mock/black.png")}
           description={event.description}
@@ -83,7 +83,7 @@ export default function EventPage({ event, isLoading, error }: EventPageProps) {
         {/* Spark it up Section */}
         <View style={styles.sparkSection}>
           <Text style={styles.sectionTitle}>Spark it up!</Text>
-          <ScrollView 
+          <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.profileScrollContent}
@@ -91,7 +91,7 @@ export default function EventPage({ event, isLoading, error }: EventPageProps) {
           >
             {mockPeople.map((person, index) => (
               <View key={person.id} style={styles.profileCardWrapper}>
-                <ProfileCard 
+                <ProfileCard
                   name={person.name}
                   image={person.image}
                   interests={person.interests}
@@ -104,9 +104,10 @@ export default function EventPage({ event, isLoading, error }: EventPageProps) {
         </View>
 
         {/* People Section */}
-        <PeopleSection 
+        <PeopleSection
           title="People"
           categories={peopleCategories}
+          eventId={event.id}
         />
       </ScrollView>
     </View>

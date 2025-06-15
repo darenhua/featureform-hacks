@@ -29,7 +29,7 @@ export async function getUsersForEvent(req, res) {
     const { data: users, error: usersError } = await supabase
       .from("user")
       .select("*")
-      .in("id", userIds);
+      .in("idfv", userIds);
 
     if (usersError) {
       return res.status(500).json({ error: usersError.message });

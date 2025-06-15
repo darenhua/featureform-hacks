@@ -1,14 +1,35 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { COLORS, FONTS } from "../../../styles/global";
-import { mockPeople } from "../../mock-people";
+import axios from "axios";
+import Constants from "expo-constants";
+
+const NODE_URL = Constants.expoConfig?.extra?.NODE_URL;
 
 export default function UserProfilePage() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  
-  const user = mockPeople.find(person => person.userId === id);
+
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    axios
+      .get(`${NODE_URL}/user/${id}`)
+      .then((response) => setUser(response.data.user))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.maintext} />
+      </View>
+    );
+  }
 
   if (!user) {
     return (
@@ -21,8 +42,7 @@ export default function UserProfilePage() {
   }
 
   const handleSparkUp = () => {
-    // Navigate to spark-up conversation page
-    router.push(`/home/events/user/spark-up/${user.userId}` as any);
+    router.push(`/home/events/user/spark-up/${user.id}` as any);
   };
 
   const handleBack = () => {
@@ -38,17 +58,17 @@ export default function UserProfilePage() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Profile Section */}
         <View style={styles.profileSection}>
-          <Image source={{ uri: user.image }} style={styles.profileImage} />
+          <Image source={{ uri: user.image || "https://randomuser.me/api/portraits/men/7.jpg" }} style={styles.profileImage} />
           <View style={styles.profileInfo}>
-            <Text style={styles.userName}>{user.name}</Text>
-            <Text style={styles.userBio}>{user.bio}</Text>
+            <Text style={styles.userName}>{user.name || `${user.firstName} ${user.lastName}`}</Text>
+            <Text style={styles.userBio}>{user.bio || user.description}</Text>
             <TouchableOpacity style={styles.sparkButton} onPress={handleSparkUp}>
               <Text style={styles.sparkButtonText}>Spark up!</Text>
             </TouchableOpacity>
@@ -56,29 +76,33 @@ export default function UserProfilePage() {
         </View>
 
         {/* Work History Section */}
-        <View style={styles.workSection}>
-          <Text style={styles.sectionTitle}>Work History</Text>
-          {user.workHistory?.map((work, index) => (
-            <View key={index} style={styles.workItem}>
-              <View style={styles.workHeader}>
-                <Text style={styles.workTitle}>{work.title}</Text>
-                <Text style={styles.workDuration}>{work.duration}</Text>
+        {user.workHistory && (
+          <View style={styles.workSection}>
+            <Text style={styles.sectionTitle}>Work History</Text>
+            {user.workHistory.map((work: any, index: number) => (
+              <View key={index} style={styles.workItem}>
+                <View style={styles.workHeader}>
+                  <Text style={styles.workTitle}>{work.title}</Text>
+                  <Text style={styles.workDuration}>{work.duration}</Text>
+                </View>
+                <Text style={styles.workCompany}>{work.company}</Text>
+                <Text style={styles.workDescription}>{work.description}</Text>
               </View>
-              <Text style={styles.workCompany}>{work.company}</Text>
-              <Text style={styles.workDescription}>{work.description}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Interests Section */}
-        <View style={styles.interestsSection}>
-          <Text style={styles.sectionTitle}>Interests & Skills</Text>
-          <View style={styles.interestsList}>
-            {user.interests.map((interest, index) => (
-              <Text key={index} style={styles.interestItem}>• {interest}</Text>
             ))}
           </View>
-        </View>
+        )}
+
+        {/* Interests Section */}
+        {user.interests && (
+          <View style={styles.interestsSection}>
+            <Text style={styles.sectionTitle}>Interests & Skills</Text>
+            <View style={styles.interestsList}>
+              {user.interests.map((interest: string, index: number) => (
+                <Text key={index} style={styles.interestItem}>• {interest}</Text>
+              ))}
+            </View>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
