@@ -12,7 +12,7 @@ import {
 } from "../controllers/users.js";
 
 import {
-  createUserEvent,
+  // createUserEvent,
   getUsersForEvent,
 } from "../controllers/user_and_event.js";
 
@@ -31,7 +31,7 @@ export default function routes(app) {
   app.get("/api/users", getAllUsers);
   app.put("/api/user/:id", updateUserById);
 
-  app.post("/api/user_event", createUserEvent);
+  // app.post("/api/user_event", createUserEvent);
   app.get("/api/:eventId/users", getUsersForEvent);
 
   app.get("/", (req, res) => res.status(200).send("foo OK"));
