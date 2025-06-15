@@ -44,8 +44,8 @@ export default function Index() {
   };
 
   const toggleInterest = (interest: string) => {
-    setSelectedInterests(prev => 
-      prev.includes(interest) 
+    setSelectedInterests(prev =>
+      prev.includes(interest)
         ? prev.filter(i => i !== interest)
         : [...prev, interest]
     );
@@ -56,7 +56,7 @@ export default function Index() {
       Alert.alert('Error', 'Please enter your LinkedIn URL');
       return;
     }
-    
+
     if (!resumeFile || resumeFile.canceled) {
       Alert.alert('Error', 'Please upload your resume');
       return;
@@ -73,7 +73,7 @@ export default function Index() {
       const formData = new FormData();
       formData.append('linkedinUrl', linkedinUrl);
       formData.append('interests', JSON.stringify(selectedInterests));
-      
+
       if (resumeFile && !resumeFile.canceled && resumeFile.assets[0]) {
         const resume = resumeFile.assets[0];
         formData.append('resume', {
@@ -85,12 +85,12 @@ export default function Index() {
 
       await onboarding(formData);
       Alert.alert('Success', 'Your information has been submitted successfully!');
-      
+
       // Reset form
       setLinkedinUrl('');
       setResumeFile(null);
       setSelectedInterests([]);
-      
+
     } catch (error) {
       console.error('Error submitting onboarding data:', error);
       Alert.alert('Error', 'Failed to submit your information. Please try again.');
@@ -144,8 +144,8 @@ export default function Index() {
           ))}
         </View>
 
-        <TouchableOpacity 
-          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]} 
+        <TouchableOpacity
+          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
           onPress={handleSubmit}
           disabled={isSubmitting}
         >

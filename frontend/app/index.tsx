@@ -4,16 +4,25 @@ import { COLORS } from "./styles/global";
 import { useEffect } from "react";
 import axios from "axios";
 import { getVendorId } from "../helper";
+import Constants from "expo-constants";
 
 export default function Index() {
   const router = useRouter();
+
   useEffect(() => {
-    axios
-      .post("https://featureform-hacks.onrender.com/user", {
-        idfv: getVendorId()
-      })
-      .then((response) => console.log(response.data))
-      .catch((error) => console.error("Error fetching data:", error));
+    const create_user = async () => {
+      const idfv = await getVendorId();
+      console.log("IDFV:", idfv);
+      axios
+        .post("https://featureform-hacks.onrender.com/user", {
+          idfv
+        })
+        .then((response) => console.log(response.data))
+        .catch((error) => console.error("Error fetching data:", error));
+    };
+
+    create_user();
+    console.log("MY_SECRET:", Constants.expoConfig?.extra?.NODE_URL);
   }, []);
 
   return (

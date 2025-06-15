@@ -8,8 +8,6 @@ export async function createUser(req, res) {
       return res.status(400).json({ error: "idfv is required" });
     }
 
-    console.log("Creating user with idfv:", idfv);
-
     const { data, error } = await supabase
       .from("user")
       .insert([{ idfv }])
