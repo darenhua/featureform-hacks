@@ -46,9 +46,10 @@ export default function Home() {
       const vendorId = await getVendorId();
 
       if (vendorId) {
-        // Join the event by adding user to the users array
+        // Join the event by adding user to the users array fixed event
         axios({
           method: "post",
+
           url: `${NODE_URL}/event/${eventId}/${vendorId}`,
         })
           .then((response) => {
