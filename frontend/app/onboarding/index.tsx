@@ -1,8 +1,10 @@
 import { Text, View, TextInput, TouchableOpacity, StyleSheet, Platform, Alert, ScrollView } from "react-native";
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import { useState } from "react";
 import { COLORS } from "../styles/global";
-import onboarding from "../api/onboarding";
+import onboarding, { OnboardingData } from "../api/onboarding";
+import { getVendorId } from "../../helper";
 
 const INTEREST_OPTIONS = [
   'Computer Science',
@@ -57,11 +59,6 @@ export default function Index() {
       return;
     }
 
-    if (!resumeFile || resumeFile.canceled) {
-      Alert.alert('Error', 'Please upload your resume');
-      return;
-    }
-
     if (selectedInterests.length === 0) {
       Alert.alert('Error', 'Please select at least one interest');
       return;
@@ -70,20 +67,37 @@ export default function Index() {
     setIsSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append('linkedinUrl', linkedinUrl);
-      formData.append('interests', JSON.stringify(selectedInterests));
-
-      if (resumeFile && !resumeFile.canceled && resumeFile.assets[0]) {
-        const resume = resumeFile.assets[0];
-        formData.append('resume', {
-          uri: resume.uri,
-          type: resume.mimeType || 'application/pdf',
-          name: resume.name,
-        } as any);
+      // Get the device IDFV
+      const idfv = await getVendorId();
+      if (!idfv) {
+        Alert.alert('Error', 'Unable to get device identifier. Please try again.');
+        return;
       }
 
-      await onboarding(formData);
+      // Structure the data according to OnboardingData interface
+      const onboardingData: OnboardingData = {
+        linkedinURL: linkedinUrl.trim(),
+        interests: selectedInterests,
+        idfv: idfv,
+      };
+
+      // Add resume data if a file was uploaded
+      if (resumeFile && !resumeFile.canceled && resumeFile.assets[0]) {
+        const resume = resumeFile.assets[0];
+        
+        // Read file as base64
+        const base64 = await FileSystem.readAsStringAsync(resume.uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        
+        onboardingData.resume = base64;
+        onboardingData.resumeFileName = resume.name;
+        onboardingData.resumeMimeType = resume.mimeType || 'application/pdf';
+      }
+
+      console.log('Submitting onboarding data with IDFV:', idfv);
+      await onboarding(onboardingData);
+      
       Alert.alert('Success', 'Your information has been submitted successfully!');
 
       // Reset form
@@ -112,10 +126,10 @@ export default function Index() {
           keyboardType="url"
         />
 
-        <Text style={styles.label}>Resume</Text>
+        <Text style={styles.label}>Resume (Optional)</Text>
         <TouchableOpacity style={styles.uploadButton} onPress={pickResume}>
           <Text style={styles.uploadButtonText}>
-            {resumeFile && !resumeFile.canceled ? 'Resume Selected' : 'Upload Resume'}
+            {resumeFile && !resumeFile.canceled ? 'Resume Selected' : 'Upload Resume (Optional)'}
           </Text>
         </TouchableOpacity>
         {resumeFile && !resumeFile.canceled && (
