@@ -18,23 +18,18 @@ export interface Event extends EventFormData {
 }
 
 export async function createEvent(data: EventFormData) {
-    const response = await axios.post(`${NODE_URL}/event`, data);
-    return response.data;
-} 
+
+  const response = await axios.post(`${NODE_URL}/event`, data);
+  return response.data;
+}
 
 export async function getAllEvents() {
-    const response = await axios.get(`${NODE_URL}/event`);
-    return response.data;
+  const response = await axios.get(`${NODE_URL}/event`);
+  return response.data;
 }
 
 export async function getEventById(id: string) {
-    const response = await axios.get(`${NODE_URL}/event/${id}`);
-    return response.data;
-}
+  const response = await axios.get(`${NODE_URL}/event/${id}`);
+  return response.data;
 
-export async function joinEvent(eventId: string, userId: string) {
-    const response = await axios.post(`${NODE_URL}/event/${eventId}/join`, {
-        user_id: userId
-    });
-    return response.data;
 }

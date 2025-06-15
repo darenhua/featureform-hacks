@@ -15,24 +15,17 @@ import {
 } from "../controllers/users.js";
 
 import {
-  createUserEvent,
   getUsersForEvent,
+  addUserToEvent, // <-- import the new function
 } from "../controllers/user_and_event.js";
 
 export default function routes(app) {
   app.get("/", (req, res) => res.status(200).send("200 OK"));
 
-  // force change
   // Event routes
   app.post("/api/event", createEvent);
   app.get("/api/event", getAllEvents);
   app.get("/api/event/:id", getEventById);
-  app.post("/api/event/:id/join", joinEvent);
-  
-  // Onboarding for linkedin , resume, and interests
-  app.post("/api/user/onboard", onboardUser);
-  app.post("/api/user/process", processUser);
-
 
   // User routes
   app.post("/api/user", createUser);
@@ -40,8 +33,9 @@ export default function routes(app) {
   app.get("/api/users", getAllUsers);
   app.put("/api/user/:id", updateUserById);
 
-  app.post("/api/user_event", createUserEvent);
-  app.get("/api/user_event/:eventId", getUsersForEvent);
+  // User and Event routes
+  app.get("/api/:eventId/users", getUsersForEvent);
+  app.post("/api/:eventId/:userId", addUserToEvent); // <-- add this route
 
   app.get("/", (req, res) => res.status(200).send("foo OK"));
 }
