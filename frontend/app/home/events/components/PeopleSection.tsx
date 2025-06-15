@@ -41,8 +41,6 @@ export default function PeopleSection({
     })
       .then((response) => {
         set_people(response.data.users)
-        console.log(response.data.users)
-
       })
       .catch((error) => console.log(error))
       .finally(() => setLoading(false));

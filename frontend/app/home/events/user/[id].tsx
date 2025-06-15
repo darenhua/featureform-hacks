@@ -18,7 +18,9 @@ export default function UserProfilePage() {
     setLoading(true);
     axios
       .get(`${NODE_URL}/user/${id}`)
-      .then((response) => setUser(response.data.user))
+      .then((response) => {
+        setUser(response.data.user)
+      })
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
   }, [id]);
