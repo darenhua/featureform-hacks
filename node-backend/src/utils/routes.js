@@ -28,7 +28,6 @@ export default function routes(app) {
   app.post("/api/user", createUser);
   app.get("/api/user/:id", getUserById);
   app.get("/api/users", getAllUsers);
-  app.delete("/api/user/:id", deleteUserById);
   app.put("/api/user/:id", updateUserById);
 
   app.get("/", (req, res) => res.status(200).send("foo OK"));
