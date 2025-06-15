@@ -2,7 +2,7 @@ import axios from "axios";
 import Constants from "expo-constants";
 import { getVendorId } from "../../helper";
 
-const NODE_URL = "http://localhost:3000/api";
+const NODE_URL = "https://featureform-hacks.onrender.com/api";
 
 export interface OnboardingData {
   linkedinURL: string;
