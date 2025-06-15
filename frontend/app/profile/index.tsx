@@ -1,34 +1,43 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
+import { useState, useEffect } from "react";
 import { COLORS, FONTS } from "../styles/global";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import Constants from "expo-constants";
 import { getVendorId } from "../../helper";
-
-const NODE_URL = Constants.expoConfig?.extra?.NODE_URL;
+import { getUserByIdfv, User } from "../api/users";
 
 export default function Profile() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      setLoading(true);
-      try {
-        const idfv = await getVendorId();
-        const response = await axios.get(`${NODE_URL}/useridfv/${idfv}`);
-        console.log(response)
-        setUser(response.data.user);
-      } catch {
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
+    fetchCurrentUser();
   }, []);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const idfv = await getVendorId();
+      if (!idfv) {
+        console.error('Could not get device IDFV');
+        setLoading(false);
+        return;
+      }
+
+      // Try to find user by IDFV using the API function
+      const currentUser = await getUserByIdfv(idfv);
+      
+      if (currentUser) {
+        setUser(currentUser);
+        console.log('Current user found:', currentUser);
+      } else {
+        console.log('Current user not found in database');
+      }
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddEvent = () => {
     router.push("/profile/add-event");
@@ -41,15 +50,8 @@ export default function Profile() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color={COLORS.maintext} />
-      </View>
-    );
-  }
-
-  if (!user) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.name}>User not found</Text>
+        <ActivityIndicator size="large" color={COLORS.accent} />
+        <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
     );
   }
@@ -57,11 +59,17 @@ export default function Profile() {
   return (
     <View style={styles.container}>
       <Image
-        source={require("../../assets/images/mock/gene.png")}
+        source={
+          user?.image_url 
+            ? { uri: user.image_url }
+            : require("../../assets/images/mock/gene.png")
+        }
         style={styles.profileImage}
       />
-      <Text style={styles.name}>{user.firstName} {user.lastName}</Text>
-
+      <Text style={styles.name}>
+        {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'Gene Park'}
+      </Text>
+      
       <TouchableOpacity style={styles.addEventButton} onPress={handleAddEvent}>
         <Text style={styles.addEventText}>Add Event</Text>
       </TouchableOpacity>
@@ -109,4 +117,10 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
     textAlign: 'center',
   },
-});
+  loadingText: {
+    color: COLORS.maintext,
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    marginTop: 16,
+  },
+}); 

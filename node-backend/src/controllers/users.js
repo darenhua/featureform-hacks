@@ -83,7 +83,7 @@ export async function getUserById(req, res) {
   }
 }
 
-// Get a user by id
+// Get a user by IDFV
 export async function getUserByIdfv(req, res) {
   try {
     const { idfv } = req.params;
@@ -101,7 +101,6 @@ export async function getUserByIdfv(req, res) {
     return res.status(500).json({ error: "Server error" });
   }
 }
-
 // Update a user by id
 export async function updateUserById(req, res) {
   try {

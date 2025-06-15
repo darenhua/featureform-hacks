@@ -1,7 +1,7 @@
 import axios from "axios";
 import Constants from "expo-constants";
 
-const NODE_URL = Constants.expoConfig?.extra?.NODE_URL;
+    const NODE_URL = "https://featureform-hacks.onrender.com/api";
 
 export interface EventFormData {
   name: string;

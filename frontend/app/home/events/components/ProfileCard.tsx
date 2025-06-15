@@ -9,6 +9,7 @@ interface ProfileCardProps {
   interests: string[];
   colorIndex: number;
   userId: string;
+  eventId?: string;
 }
 
 const accentColors = [
@@ -18,12 +19,15 @@ const accentColors = [
   `#${COLORS.darkYellow}`,
 ];
 
-export default function ProfileCard({ name, image, interests, colorIndex, userId }: ProfileCardProps) {
+export default function ProfileCard({ name, image, interests, colorIndex, userId, eventId }: ProfileCardProps) {
   const router = useRouter();
   const accentColor = accentColors[colorIndex % accentColors.length];
 
   const handlePress = () => {
-    router.push(`/home/events/user/${userId}` as any);
+    const url = eventId 
+      ? `/home/events/user/${userId}?eventId=${eventId}`
+      : `/home/events/user/${userId}`;
+    router.push(url as any);
   };
 
   const imageSource = typeof image === 'string' ? { uri: image } : image;

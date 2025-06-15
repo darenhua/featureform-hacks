@@ -2,49 +2,51 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { COLORS, FONTS } from "../../../styles/global";
 import CompactProfileCard from "./CompactProfileCard";
-import { mockPeopleByCategory } from "../../mock-people";
-import axios from "axios";
-import Constants from "expo-constants";
-
-const NODE_URL = Constants.expoConfig?.extra?.NODE_URL;
+import { getAllUsers, User } from "../../../api/users";
 
 interface PeopleSectionProps {
   title: string;
   eventId: string;
+  currentUserIdfv?: string | null;
   categories: {
     name: string;
     count: number;
   }[];
 }
 
-type Person = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  image_url: string;
-  headline: string;
-};
-
 export default function PeopleSection({
   title,
   categories,
   eventId,
+  currentUserIdfv,
 }: PeopleSectionProps) {
-  const [people, set_people] = useState<Person[]>([]);
+  const [people, setPeople] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    axios({
-      method: "get",
-      url: `${NODE_URL}/${eventId}/users`,
-    })
-      .then((response) => {
-        set_people(response.data.users)
-      })
-      .catch((error) => console.log(error))
-      .finally(() => setLoading(false));
-  }, [eventId]);
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllUsers();
+      // Filter users that have been processed (completed onboarding)
+      const processedUsers = response.users.filter(user => user.processed === true);
+      setPeople(processedUsers);
+      console.log(`Fetched ${processedUsers.length} processed users for people section`);
+    } catch (error) {
+      console.error('Error fetching users for people section:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter out current user from the list
+  const getFilteredPeople = () => {
+    if (!currentUserIdfv) return people;
+    return people.filter(user => user.idfv !== currentUserIdfv);
+  };
 
   // const getCategoryColor = (categoryName: string) => {
   //   switch (categoryName) {
@@ -68,27 +70,36 @@ export default function PeopleSection({
     );
   }
 
+  const filteredPeople = getFilteredPeople();
+
   return (
     <View style={styles.peopleSection}>
       <Text style={styles.sectionTitle}>{title}</Text>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.peopleScrollContent}
-        style={styles.peopleScrollContainer}
-      >
-        {people.map((person) => (
-          <View key={person.id} style={styles.compactCardWrapper}>
-            <CompactProfileCard
-              name={`${person.firstName} ${person.lastName}`}
-              image="https://randomuser.me/api/portraits/men/7.jpg"
-              title={person.headline}
-              userId={person.id}
-            />
-          </View>
-        ))}
-      </ScrollView>
+      {filteredPeople.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No other users available</Text>
+        </View>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.peopleScrollContent}
+          style={styles.peopleScrollContainer}
+        >
+          {filteredPeople.slice(0, 8).map((person) => (
+            <View key={person.id} style={styles.compactCardWrapper}>
+              <CompactProfileCard
+                name={`${person.firstName || ''} ${person.lastName || ''}`.trim() || 'User'}
+                image={person.image_url || "https://randomuser.me/api/portraits/men/7.jpg"}
+                title={person.headline || 'User'}
+                userId={person.id}
+                eventId={eventId}
+              />
+            </View>
+          ))}
+        </ScrollView>
+      )}
 
 
 
@@ -164,5 +175,15 @@ const styles = StyleSheet.create({
   },
   compactCardWrapper: {
     marginRight: 12,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 28,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.subtext,
   },
 });

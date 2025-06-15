@@ -3,6 +3,7 @@ import {
   getAllEvents,
   getEventById,
   joinEvent,
+  joinEventByIdfv,
 } from "../controllers/events.js";
 
 import {
@@ -16,10 +17,10 @@ import {
   findSimilarUsers,
 } from "../controllers/users.js";
 
-import {
-  getUsersForEvent,
-  addUserToEvent, // <-- import the new function
-} from "../controllers/user_and_event.js";
+// import {
+//   createUserEvent,
+//   getUsersForEvent,
+// } from "../controllers/user_and_event.js";
 
 export default function routes(app) {
   app.get("/", (req, res) => res.status(200).send("200 OK"));
@@ -30,6 +31,9 @@ export default function routes(app) {
   app.get("/api/event/:id", getEventById);
   app.post("/api/event/:id/join", joinEvent);
 
+  // Alternative route for frontend IDFV-based joining
+  app.post("/api/event/:eventId/:idfv", joinEventByIdfv);
+
   // Onboarding for linkedin , resume, and interests
   app.post("/api/user/onboard", onboardUser);
   app.post("/api/user/process", processUser);
@@ -37,14 +41,13 @@ export default function routes(app) {
   // User routes
   app.post("/api/user", createUser);
   app.get("/api/user/:id", getUserById);
-  app.get("/api/useridfv/:idfv", getUserByIdfv);
+
+  app.get("/api/user/idfv/:idfv", getUserByIdfv);
 
   app.get("/api/users", getAllUsers);
   app.put("/api/user/:id", updateUserById);
 
   // User and Event routes
-  app.get("/api/:eventId/users", getUsersForEvent);
-  app.post("/api/:eventId/:userIdfv", addUserToEvent); // <-- add this route
   app.post("/api/user/find_similar_users", findSimilarUsers);
 
   // app.post("/api/user_event", createUserEvent);
