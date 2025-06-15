@@ -8,10 +8,10 @@ import { getVendorId } from "../helper";
 export default function Index() {
   const router = useRouter();
   useEffect(() => {
-    console.log(getVendorId());
-
     axios
-      .get("https://featureform-hacks.onrender.com")
+      .post("https://featureform-hacks.onrender.com/user", {
+        idfv: getVendorId()
+      })
       .then((response) => console.log(response.data))
       .catch((error) => console.error("Error fetching data:", error));
   }, []);

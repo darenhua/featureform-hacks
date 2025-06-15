@@ -3,14 +3,14 @@ import { supabase } from "../../index.js";
 // Create a user
 export async function createUser(req, res) {
   try {
-    const { firstName, oneLiner } = req.body;
-    if (!firstName) {
-      return res.status(400).json({ error: "firstName is required" });
+    const { idfv } = req.body;
+    if (!idfv) {
+      return res.status(400).json({ error: "idfv is required" });
     }
 
     const { data, error } = await supabase
       .from("user")
-      .insert([{ firstName, oneLiner: oneLiner || "" }])
+      .insert([{ idfv }])
       .select()
       .single();
 
