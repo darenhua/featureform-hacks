@@ -38,6 +38,7 @@ export default function PeopleSection({ title, categories }: PeopleSectionProps)
                     image={person.image}
                     title={person.title}
                     colorIndex={colorIndex}
+                    userId={person.userId}
                   />
                 </View>
               );

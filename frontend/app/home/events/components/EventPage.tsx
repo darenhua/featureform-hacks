@@ -12,6 +12,9 @@ interface Event {
   name: string;
   image: any;
   description?: string;
+  location?: string;
+  date?: string;
+  time?: string;
 }
 
 interface EventPageProps {
@@ -53,6 +56,9 @@ export default function EventPage({ event }: EventPageProps) {
           name={event.name}
           image={event.image}
           description={event.description}
+          location={event.location}
+          date={event.date}
+          time={event.time}
         />
 
         {/* Spark it up Section */}
@@ -71,6 +77,7 @@ export default function EventPage({ event }: EventPageProps) {
                   image={person.image}
                   interests={person.interests}
                   colorIndex={index}
+                  userId={person.userId}
                 />
               </View>
             ))}

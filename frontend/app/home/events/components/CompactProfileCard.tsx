@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, ImageSourcePropType } from "react-native";
+import { View, Text, Image, StyleSheet, ImageSourcePropType, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 import { COLORS, FONTS } from "../../../styles/global";
 
 interface CompactProfileCardProps {
@@ -7,6 +8,7 @@ interface CompactProfileCardProps {
   image: ImageSourcePropType;
   title: string;
   colorIndex: number;
+  userId: string;
 }
 
 const backgroundColors = [
@@ -16,17 +18,24 @@ const backgroundColors = [
   `#${COLORS.darkYellow}`,
 ];
 
-export default function CompactProfileCard({ name, image, title, colorIndex }: CompactProfileCardProps) {
+export default function CompactProfileCard({ name, image, title, colorIndex, userId }: CompactProfileCardProps) {
+  const router = useRouter();
   const backgroundColor = backgroundColors[colorIndex % backgroundColors.length];
 
+  const handlePress = () => {
+    router.push(`/home/events/user/${userId}` as any);
+  };
+
   return (
-    <View style={[styles.compactCard, { backgroundColor }]}>
-      <Image source={image} style={styles.profileImage} />
-      <View style={styles.profileInfo}>
-        <Text style={styles.profileName}>{name}</Text>
-        <Text style={styles.profileTitle}>{title}</Text>
+    <TouchableOpacity onPress={handlePress}>
+      <View style={[styles.compactCard, { backgroundColor }]}>
+        <Image source={image} style={styles.profileImage} />
+        <View style={styles.profileInfo}>
+          <Text style={styles.profileName}>{name}</Text>
+          <Text style={styles.profileTitle}>{title}</Text>
+        </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

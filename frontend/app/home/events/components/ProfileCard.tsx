@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, ImageSourcePropType } from "react-native";
+import { View, Text, Image, StyleSheet, ImageSourcePropType, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 import { COLORS, FONTS } from "../../../styles/global";
 
 interface ProfileCardProps {
@@ -7,6 +8,7 @@ interface ProfileCardProps {
   image: ImageSourcePropType;
   interests: string[];
   colorIndex: number;
+  userId: string;
 }
 
 const accentColors = [
@@ -16,27 +18,34 @@ const accentColors = [
   `#${COLORS.darkYellow}`,
 ];
 
-export default function ProfileCard({ name, image, interests, colorIndex }: ProfileCardProps) {
+export default function ProfileCard({ name, image, interests, colorIndex, userId }: ProfileCardProps) {
+  const router = useRouter();
   const accentColor = accentColors[colorIndex % accentColors.length];
 
+  const handlePress = () => {
+    router.push(`/home/events/user/${userId}` as any);
+  };
+
   return (
-    <View style={[styles.profileCard, { borderLeftColor: accentColor }]}>
-      <Image source={image} style={styles.profileImage} />
-      <View style={styles.profileInfo}>
-        <Text style={styles.profileName}>{name}</Text>
-        <View style={styles.interestsList}>
-          {interests.map((interest, index) => (
-            <Text key={index} style={styles.interestItem}>• {interest}</Text>
-          ))}
+    <TouchableOpacity onPress={handlePress}>
+      <View style={[styles.profileCard, { borderLeftColor: accentColor }]}>
+        <Image source={image} style={styles.profileImage} />
+        <View style={styles.profileInfo}>
+          <Text style={styles.profileName}>{name}</Text>
+          <View style={styles.interestsList}>
+            {interests.map((interest, index) => (
+              <Text key={index} style={styles.interestItem}>• {interest}</Text>
+            ))}
+          </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   profileCard: {
-    backgroundColor: "#0F2A65",
+    backgroundColor: "#1B263D",
     borderRadius: 20,
     padding: 20,
     flexDirection: "row",

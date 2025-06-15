@@ -6,9 +6,12 @@ interface EventCardProps {
   name: string;
   image: ImageSourcePropType;
   description?: string;
+  location?: string;
+  date?: string;
+  time?: string;
 }
 
-export default function EventCard({ name, image, description }: EventCardProps) {
+export default function EventCard({ name, image, description, location, date, time }: EventCardProps) {
   return (
     <View style={styles.eventCard}>
       <View style={styles.eventImageContainer}>
@@ -17,14 +20,25 @@ export default function EventCard({ name, image, description }: EventCardProps) 
           <Text style={styles.eventTitle}>
             {name === "Featureform 2025" ? "MCP\nHackathon" : name}
           </Text>
-          <Text style={styles.eventSponsors}>Sponsored by</Text>
-          <View style={styles.sponsorLogos}>
-            <Text style={styles.sponsorText}>featureform</Text>
-            <Text style={styles.sponsorText}>RIDGE</Text>
+          
+          {/* Event Details */}
+          <View style={styles.eventDetails}>
+            {location && (
+              <Text style={styles.detailText}>{location}</Text>
+            )}
+            {date && (
+              <Text style={styles.detailText}>{date}</Text>
+            )}
+            {time && (
+              <Text style={styles.detailText}>{time}</Text>
+            )}
           </View>
-          <Text style={styles.eventDescriptionOverlay}>
-            {description || "This is a networking event at Ridge Ventures featuring a MCP hackathon"}
-          </Text>
+
+          {description && (
+            <Text style={styles.eventDescriptionOverlay}>
+              {description}
+            </Text>
+          )}
         </View>
       </View>
     </View>
@@ -54,47 +68,37 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingVertical: 24,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
   eventTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontFamily: FONTS.extraBold,
     color: COLORS.maintext,
-    marginBottom: 8,
-    lineHeight: 36,
+    marginBottom: 12,
+    lineHeight: 32,
     textShadowColor: 'rgba(0, 0, 0, 0.8)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
   },
-  eventSponsors: {
-    fontSize: 12,
-    fontFamily: FONTS.regular,
+  eventDetails: {
+    marginBottom: 12,
+  },
+  detailText: {
+    fontSize: 13,
+    fontFamily: FONTS.medium,
     color: COLORS.subtext,
-    marginBottom: 4,
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  sponsorLogos: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 16,
-  },
-  sponsorText: {
-    fontSize: 14,
-    fontFamily: FONTS.bold,
-    color: COLORS.maintext,
+    marginBottom: 3,
     textShadowColor: 'rgba(0, 0, 0, 0.8)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
   eventDescriptionOverlay: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: FONTS.regular,
     color: COLORS.maintext,
-    lineHeight: 22,
+    lineHeight: 20,
     textShadowColor: 'rgba(0, 0, 0, 0.8)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
