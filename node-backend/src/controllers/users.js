@@ -8,6 +8,24 @@ export async function createUser(req, res) {
       return res.status(400).json({ error: "idfv is required" });
     }
 
+    // Check if user with this idfv already exists
+    const { data: existingUser, error: findError } = await supabase
+      .from("user")
+      .select("*")
+      .eq("idfv", idfv)
+      .single();
+
+    if (findError && findError.code !== "PGRST116") {
+      // PGRST116: No rows found, not an error for our case
+      return res.status(500).json({ error: findError.message });
+    }
+
+    if (existingUser) {
+      return res
+        .status(200)
+        .json({ message: "User already exists", user: existingUser });
+    }
+
     const { data, error } = await supabase
       .from("user")
       .insert([{ idfv }])

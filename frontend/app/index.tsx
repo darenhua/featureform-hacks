@@ -12,9 +12,8 @@ export default function Index() {
   useEffect(() => {
     const create_user = async () => {
       const idfv = await getVendorId();
-      console.log("IDFV:", idfv);
       axios
-        .post("https://featureform-hacks.onrender.com/user", {
+        .post(`${Constants.expoConfig?.extra?.NODE_URL}/user`, {
           idfv
         })
         .then((response) => console.log(response.data))
@@ -22,7 +21,6 @@ export default function Index() {
     };
 
     create_user();
-    console.log("MY_SECRET:", Constants.expoConfig?.extra?.NODE_URL);
   }, []);
 
   return (
