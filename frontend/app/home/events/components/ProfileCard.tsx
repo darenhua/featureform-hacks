@@ -1,11 +1,11 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, ImageSourcePropType, TouchableOpacity } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { COLORS, FONTS } from "../../../styles/global";
 
 interface ProfileCardProps {
   name: string;
-  image: ImageSourcePropType;
+  image: string;
   interests: string[];
   colorIndex: number;
   userId: string;
@@ -26,10 +26,12 @@ export default function ProfileCard({ name, image, interests, colorIndex, userId
     router.push(`/home/events/user/${userId}` as any);
   };
 
+  const imageSource = typeof image === 'string' ? { uri: image } : image;
+
   return (
     <TouchableOpacity onPress={handlePress}>
       <View style={[styles.profileCard, { borderLeftColor: accentColor }]}>
-        <Image source={image} style={styles.profileImage} />
+        <Image source={imageSource} style={styles.profileImage} />
         <View style={styles.profileInfo}>
           <Text style={styles.profileName}>{name}</Text>
           <View style={styles.interestsList}>
@@ -45,7 +47,7 @@ export default function ProfileCard({ name, image, interests, colorIndex, userId
 
 const styles = StyleSheet.create({
   profileCard: {
-    backgroundColor: "#1B263D",
+    backgroundColor: "black",
     borderRadius: 20,
     padding: 20,
     flexDirection: "row",

@@ -1,11 +1,21 @@
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { COLORS, FONTS } from "../styles/global";
 import EventCard from "../../components/EventCard";
 import ProfileButton from "../../components/ProfileButton";
 import FloatingCamButton from "../../components/FloatingCamButton";
-import { getAllEvents, Event } from "../api/events";
+import { getAllEvents, joinEvent, Event } from "../api/events";
+import { getVendorId } from "../../helper";
+import axios from "axios";
+import Constants from "expo-constants";
+const NODE_URL = Constants.expoConfig?.extra?.NODE_URL;
 
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -16,11 +26,12 @@ export default function Home() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        //Fetch all events and set them to the events state
         const response = await getAllEvents();
         setEvents(response.events || []);
       } catch (err) {
-        console.error('Error fetching events:', err);
-        setError('Failed to load events');
+        console.error("Error fetching events:", err);
+        setError("Failed to load events");
       } finally {
         setIsLoading(false);
       }
@@ -29,8 +40,31 @@ export default function Home() {
     fetchEvents();
   }, []);
 
-  const handleEventPress = (eventId: string) => {
-    console.log('Navigating to event:', eventId);
+  const handleEventPress = async (eventId: string) => {
+    try {
+      // Get the vendor ID from the device --> This is out way of identifying the user
+      const vendorId = await getVendorId();
+
+      if (vendorId) {
+        // Join the event by adding user to the users array
+        axios({
+          method: "post",
+          url: `${NODE_URL}/${eventId}/${vendorId}`,
+        })
+          .then((response) => {
+            console.log(response.data)
+          })
+          .catch((error) => console.log("cannot join", error));
+      } else {
+        console.warn("Could not get vendor ID");
+      }
+    } catch (error) {
+      console.error("Error joining event:", error);
+      // Continue to navigate even if join fails
+    }
+
+    // Navigate to the event page
+    // console.log("Navigating to event:", eventId);
     router.push(`/home/events/${eventId}` as any);
   };
 
@@ -66,15 +100,17 @@ export default function Home() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.logo}>Spark</Text>
-        <ProfileButton imageUri={require("../../assets/images/mock/gene.png")} />
+        <ProfileButton
+          imageUri={require("../../assets/images/mock/gene.png")}
+        />
       </View>
 
       {/* Events Grid */}
-      <ScrollView 
+      <ScrollView
         style={styles.gridWrapper}
         contentContainerStyle={[
           styles.scrollContent,
-          events.length === 0 && styles.centerContent
+          events.length === 0 && styles.centerContent,
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -84,11 +120,15 @@ export default function Home() {
           eventRows.map((row, rowIndex) => (
             <View key={rowIndex} style={styles.row}>
               {row.map((event) => (
-                <EventCard 
-                  key={event.id} 
-                  name={event.name} 
-                  image={event.image_url ? { uri: event.image_url } : require("../../assets/images/mock/screenshot1.png")}
-                  onPress={() => handleEventPress(event.id)} 
+                <EventCard
+                  key={event.id}
+                  name={event.name}
+                  image={
+                    event.image_url
+                      ? { uri: event.image_url }
+                      : require("../../assets/images/mock/screenshot1.png")
+                  }
+                  onPress={() => handleEventPress(event.id)}
                 />
               ))}
               {/* Add spacer if row has only one event to maintain layout */}
@@ -122,7 +162,6 @@ const styles = StyleSheet.create({
   },
   logo: {
     fontSize: 20,
-    fontWeight: "700",
     fontFamily: FONTS.extraBold,
     color: COLORS.accent,
   },
