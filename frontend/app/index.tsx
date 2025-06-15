@@ -13,7 +13,7 @@ import axios from "axios";
 import { getVendorId } from "../helper";
 import Constants from "expo-constants";
 
-const NODE_URL = "http://localhost:3000/api";
+const NODE_URL = "https://featureform-hacks.onrender.com/api";
 
 export default function Index() {
     const router = useRouter();
