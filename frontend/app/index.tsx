@@ -1,22 +1,32 @@
 import { View, Text, Button, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { COLORS } from "./styles/global";
+import { useEffect } from "react";
+import axios from "axios";
 
 export default function Index() {
   const router = useRouter();
+  useEffect(() => {
+
+    axios
+      // .get(`http://10.81.25.52:3000`)
+      .get("https://featureform-hacks.onrender.com")
+      .then((response) => console.log(response.data))
+      .catch((error) => console.error("Error fetching data:", error));
+  }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome!</Text>
       <View style={styles.buttonContainer}>
-        <Button 
-          title="Go to Onboarding" 
-          onPress={() => router.push("/onboarding")} 
+        <Button
+          title="Go to Onboarding"
+          onPress={() => router.push("/onboarding")}
         />
         <View style={styles.spacer} />
-        <Button 
-          title="Go to Home" 
-          onPress={() => router.push("/home")} 
+        <Button
+          title="Go to Home"
+          onPress={() => router.push("/home")}
         />
       </View>
     </View>

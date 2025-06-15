@@ -31,7 +31,7 @@ export default function App() {
 
     axios
       // .get(`http://10.81.25.52:3000`)
-      .get("https://httpbin.org/get")
+      .get("https://featureform-hacks.onrender.com")
       .then((response) => console.log(response))
       .catch((error) => console.error("Error fetching data:", error));
   }, []);
