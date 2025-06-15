@@ -407,3 +407,147 @@ async function generateProfileSummary(linkedinData, resumeText, interests) {
     throw error;
   }
 }
+
+export async function findSimilarUsers(req, res) {
+  try {
+    const { idfv } = req.body;
+    
+    if (!idfv) {
+      return res.status(400).json({ error: "idfv is required" });
+    }
+
+    console.log(`🔍 Finding similar users for IDFV: ${idfv}`);
+
+    // Get the current user's data
+    const { data: currentUser, error: currentUserError } = await supabase
+      .from("user")
+      .select("*")
+      .eq("idfv", idfv)
+      .single();
+
+    if (currentUserError || !currentUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!currentUser.embedding || !currentUser.interests) {
+      return res.status(400).json({ error: "User must have embedding and interests to find similar users" });
+    }
+
+    console.log(`👤 Current user: ${currentUser.firstName} ${currentUser.lastName}`);
+    console.log(`🎯 Current user interests: ${JSON.stringify(currentUser.interests)}`);
+
+    // Get all other users with embeddings and interests (excluding current user)
+    const { data: allUsers, error: allUsersError } = await supabase
+      .from("user")
+      .select("id, idfv, firstName, lastName, interests, embedding, short_description, headline")
+      .neq("idfv", idfv)
+      .not("embedding", "is", null)
+      .not("interests", "is", null);
+
+    if (allUsersError) {
+      console.error("❌ Error fetching users:", allUsersError);
+      return res.status(500).json({ error: "Failed to fetch users" });
+    }
+
+    console.log(`📊 Found ${allUsers.length} potential similar users`);
+
+    // Calculate similarity scores for each user
+    const userSimilarities = allUsers.map(user => {
+      // Calculate cosine similarity between embeddings
+      const embeddingSimilarity = calculateCosineSimilarity(currentUser.embedding, user.embedding);
+      
+      // Calculate interest overlap (Jaccard similarity)
+      const interestSimilarity = calculateInterestSimilarity(currentUser.interests, user.interests);
+      
+      // Combined similarity score (weighted: 70% embedding, 30% interests)
+      const combinedSimilarity = (embeddingSimilarity * 0.7) + (interestSimilarity * 0.3);
+      
+      return {
+        id: user.id,
+        idfv: user.idfv,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        interests: user.interests,
+        short_description: user.short_description,
+        headline: user.headline,
+        embeddingSimilarity: embeddingSimilarity,
+        interestSimilarity: interestSimilarity,
+        combinedSimilarity: combinedSimilarity
+      };
+    });
+
+    // Sort by combined similarity (highest first) and take top 6
+    const topSimilarUsers = userSimilarities
+      .sort((a, b) => b.combinedSimilarity - a.combinedSimilarity)
+      .slice(0, 6);
+
+    console.log("🎯 TOP 6 SIMILAR USERS (ranked by similarity):");
+    console.log("================================================");
+    topSimilarUsers.forEach((user, index) => {
+      console.log(`${index + 1}. ${user.firstName} ${user.lastName}`);
+      console.log(`   Combined Similarity: ${(user.combinedSimilarity * 100).toFixed(1)}%`);
+      console.log(`   Embedding Similarity: ${(user.embeddingSimilarity * 100).toFixed(1)}%`);
+      console.log(`   Interest Similarity: ${(user.interestSimilarity * 100).toFixed(1)}%`);
+      console.log(`   Interests: ${JSON.stringify(user.interests)}`);
+      console.log(`   Description: ${user.short_description || 'N/A'}`);
+      console.log(`   Headline: ${user.headline || 'N/A'}`);
+      console.log("   ---");
+    });
+
+    console.log("\n📋 SIMILAR USERS ARRAY:");
+    console.log(topSimilarUsers);
+
+    return res.status(200).json({
+      message: "Similar users found successfully",
+      currentUser: {
+        firstName: currentUser.firstName,
+        lastName: currentUser.lastName,
+        interests: currentUser.interests
+      },
+      similarUsers: topSimilarUsers,
+      totalFound: allUsers.length
+    });
+
+  } catch (error) {
+    console.error("❌ Server error in findSimilarUsers:", error);
+    return res.status(500).json({ error: "Server error" });
+  }
+}
+
+// Helper function to calculate cosine similarity between two vectors
+function calculateCosineSimilarity(vectorA, vectorB) {
+  if (!vectorA || !vectorB || vectorA.length !== vectorB.length) {
+    return 0;
+  }
+  
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  
+  for (let i = 0; i < vectorA.length; i++) {
+    dotProduct += vectorA[i] * vectorB[i];
+    normA += vectorA[i] * vectorA[i];
+    normB += vectorB[i] * vectorB[i];
+  }
+  
+  if (normA === 0 || normB === 0) {
+    return 0;
+  }
+  
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+// Helper function to calculate interest similarity (Jaccard index)
+function calculateInterestSimilarity(interestsA, interestsB) {
+  if (!interestsA || !interestsB || interestsA.length === 0 || interestsB.length === 0) {
+    return 0;
+  }
+  
+  const setA = new Set(interestsA.map(interest => interest.toLowerCase()));
+  const setB = new Set(interestsB.map(interest => interest.toLowerCase()));
+  
+  const intersection = new Set([...setA].filter(x => setB.has(x)));
+  const union = new Set([...setA, ...setB]);
+  
+  return intersection.size / union.size;
+}
