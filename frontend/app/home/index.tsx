@@ -49,13 +49,12 @@ export default function Home() {
         // Join the event by adding user to the users array
         axios({
           method: "post",
-          url: `${NODE_URL}/event/${eventId}/${vendorId}`,
+          url: `${NODE_URL}/${eventId}/${vendorId}`,
         })
           .then((response) => {
-            // console.log(response.data)
+            console.log(response.data)
           })
-          .catch((error) => console.log(error));
-        // console.log('User joined event:', eventId);
+          .catch((error) => console.log("cannot join", error));
       } else {
         console.warn("Could not get vendor ID");
       }

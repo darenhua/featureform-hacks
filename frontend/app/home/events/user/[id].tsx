@@ -45,6 +45,7 @@ export default function UserProfilePage() {
         }
       })
       .finally(() => setLoading(false));
+
   }, [id]);
 
   if (loading) {
@@ -105,10 +106,10 @@ export default function UserProfilePage() {
         </View>
 
         {/* Work History Section */}
-        {user.workHistory && (
+        {user.work_history && (
           <View style={styles.workSection}>
             <Text style={styles.sectionTitle}>Work History</Text>
-            {user.workHistory.map((work: any, index: number) => (
+            {user.work_history.map((work: any, index: number) => (
               <View key={index} style={styles.workItem}>
                 <View style={styles.workHeader}>
                   <Text style={styles.workTitle}>{work.title}</Text>
