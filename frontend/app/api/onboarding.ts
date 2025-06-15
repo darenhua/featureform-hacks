@@ -1,10 +1,14 @@
 import axios from "axios";
-import { API } from ".";
+import Constants from "expo-constants";
 
-//Sending Linkedin URL / Resume Info/ Interests 
+//Sending Linkedin URL / Resume Info/ Interests
 const onboarding = async (data: any) => {
-    const response = await axios.post(`${API.url}/onboarding`, data);
-    return response.data;
-}
+  console.log(data);
+  const response = await axios.get(
+    `${Constants.expoConfig?.extra?.NODE_URL}/users`
+  );
+  console.log("Onboarding response:", response.data);
+  return response.data;
+};
 
 export default onboarding;
