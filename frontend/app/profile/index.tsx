@@ -1,9 +1,34 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { COLORS, FONTS } from "../styles/global";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import Constants from "expo-constants";
+import { getVendorId } from "../../helper";
+
+const NODE_URL = Constants.expoConfig?.extra?.NODE_URL;
 
 export default function Profile() {
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      setLoading(true);
+      try {
+        const idfv = await getVendorId();
+        const response = await axios.get(`${NODE_URL}/useridfv/${idfv}`);
+        console.log(response)
+        setUser(response.data.user);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const handleAddEvent = () => {
     router.push("/profile/add-event");
@@ -13,14 +38,30 @@ export default function Profile() {
     router.push("/profile/past-sparks");
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.maintext} />
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.name}>User not found</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Image
         source={require("../../assets/images/mock/gene.png")}
         style={styles.profileImage}
       />
-      <Text style={styles.name}>Gene Park</Text>
-      
+      <Text style={styles.name}>{user.firstName} {user.lastName}</Text>
+
       <TouchableOpacity style={styles.addEventButton} onPress={handleAddEvent}>
         <Text style={styles.addEventText}>Add Event</Text>
       </TouchableOpacity>
@@ -68,4 +109,4 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
     textAlign: 'center',
   },
-}); 
+});

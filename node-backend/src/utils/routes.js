@@ -9,6 +9,7 @@ import {
   createUser,
   getAllUsers,
   getUserById,
+  getUserByIdfv,
   updateUserById,
   processUser,
   onboardUser,
@@ -36,6 +37,8 @@ export default function routes(app) {
   // User routes
   app.post("/api/user", createUser);
   app.get("/api/user/:id", getUserById);
+  app.get("/api/useridfv/:idfv", getUserByIdfv);
+
   app.get("/api/users", getAllUsers);
   app.put("/api/user/:id", updateUserById);
 
