@@ -35,27 +35,55 @@ app = EnrichMCP("API Gateway", description="MCP Server for people in the databas
 
 
 @app.entity
+class Conversation(EnrichModel):
+    """Conversation between two people."""
+
+    id: int = Field(
+        description="Unique conversation snippet ID in a conversation group"
+    )
+    summary: str = Field(description="Summary of the snippet of the conversation")
+    next_convo_topic: str = Field(
+        description="3 bullet points for conversation starters that was suggested after this snippet"
+    )
+
+
+@app.entity
+class ConversationGroup(EnrichModel):
+    """Group of conversations."""
+
+    id: int = Field(description="Unique conversation group ID")
+    user_id: int = Field(description="ID of the user that started the conversation")
+    second_person_id: int = Field(
+        description="ID of the second person in the conversation"
+    )
+    event_id: int = Field(
+        description="ID of the event that the conversation took place"
+    )
+    conversations: list[Conversation] = Relationship(
+        description="Summaries and suggested topics that happened since the conversation started"
+    )
+
+
+@app.entity
 class Person(EnrichModel):
     """Person to find data about."""
 
     id: int = Field(description="Unique person ID")
     firstName: str = Field(description="First name")
     lastName: str = Field(description="Last name")
-    # age: int = Field(description="Age")
-    # location: str = Field(description="City, state, or region")
-    # oneLiner: str = Field(
-    #     description="1 or 2 sentence description of this person (e.g., 'AI Enthusiast & Startup Founder')"
+    shortDescription: str = Field(description="Short description of the person")
+    longDescription: str = Field(description="Long description of the person")
+    # headline: str = Field(description="Headline")
+    # aboutDescription: str = Field(description="Description of this person on linkedin")
+    # location: str = Field(description="Where this person lives")
+    # currentSchool: str = Field(
+    #     description="The school this person is currently attending, or none"
+    # )
+    # currentCompany: str = Field(
+    #     description="The company they are currently working for, or null"
     # )
 
-    linkedinUrl: str = Field(description="Public LinkedIn profile")
-    # categories: list[str] = Field(
-    #     description="Tags like ['Entrepreneurship', 'Product Design', 'Basketball']"
-    # )
-
-    # interests: list[str] = Field(description="Interests")
-    # hobbies: list[str] = Field(description="Hobbies")
-
-    # mediaConsumed: list["Media"] = Relationship(description="Media like youtube videos, blogs, movies, etc, that this person has consumed")
+    # linkedinUrl: str = Field(description="Public LinkedIn profile")
 
     # Define navigable relationships
     # companies: list["Company"] = Relationship(
@@ -63,10 +91,10 @@ class Person(EnrichModel):
     # )
 
 
-class PartialPerson(Person):
-    firstName: Optional[str]
-    lastName: Optional[str]
-    linkedinUrl: Optional[str]
+# class PartialPerson(Person):
+#     firstName: Optional[str]
+#     lastName: Optional[str]
+#     linkedinUrl: Optional[str]
 
 
 # @app.entity
@@ -78,70 +106,133 @@ class PartialPerson(Person):
 #     mediaDescription: str = Field(description="Description of the media")
 
 
-@app.entity
-class Company(EnrichModel):
-    """Company that a person has worked for."""
+# @app.entity
+# class Company(EnrichModel):
+#     """Company that a person has worked for."""
 
-    id: int = Field(description="Company ID")
-    name: str = Field(description="Company name")
+#     id: int = Field(description="Company ID")
+#     name: str = Field(description="Company name")
 
 
 def map_db_to_obj(db_obj: dict) -> Person:
     """Map a database object to a Person object."""
     return Person(
         id=db_obj["id"],
-        firstName=db_obj["first_name"] or "",
-        lastName=db_obj["last_name"] or "",
-        linkedinUrl=db_obj["linkedin_url"] or "",
+        firstName=db_obj["firstName"],
+        lastName=db_obj["lastName"],
+        shortDescription=db_obj["short_description"],
+        longDescription=db_obj["long_description"],
     )
 
 
-def map_obj_to_db(mcp_obj: Person) -> dict:
-    """Map a Person object to a database object."""
-    update_fields = {"id": mcp_obj.id}
+def map_db_to_obj_conversation(db_obj: dict) -> Conversation:
+    """Map a database object to a Conversation object."""
+    return Conversation(
+        id=db_obj["id"],
+        summary=db_obj["summary"],
+        next_convo_topic=db_obj["next_convo_topic"],
+    )
 
-    if mcp_obj.firstName is not None:
-        update_fields["first_name"] = mcp_obj.firstName
-    if mcp_obj.lastName is not None:
-        update_fields["last_name"] = mcp_obj.lastName
-    if mcp_obj.linkedinUrl is not None:
-        update_fields["linkedin_url"] = mcp_obj.linkedinUrl
 
-    return update_fields
+def map_db_to_obj_conversation_group(db_obj: dict) -> ConversationGroup:
+    """Map a database object to a ConversationGroup object."""
+    return ConversationGroup(
+        id=db_obj["id"],
+        user_id=db_obj["user_id"],
+        second_person_id=db_obj["second_person_id"],
+        event_id=db_obj["event_id"],
+    )
+
+
+# def map_obj_to_db(mcp_obj: Person) -> dict:
+#     """Map a Person object to a database object."""
+#     update_fields = {"id": mcp_obj.id}
+#     if mcp_obj.short_description is not None:
+#         update_fields["short_description"] = mcp_obj.short_description
+
+#     return update_fields
 
 
 # Define how to fetch data
 @app.resource
-async def get_person_data(person_id: int) -> Person:
-    """Fetch detailed information about a person by their ID."""
-    person = (
-        supabase.table("scraped_users")
-        .select("*")
-        .eq("id", person_id)
-        .execute()
-        .data[0]
-    )
+async def research_person(person_id: int) -> Person:
+    """Research a person's data based on their ID."""
+    person = supabase.table("user").select("*").eq("id", person_id).execute().data[0]
 
     mcp_person = map_db_to_obj(person)
     return mcp_person
 
 
 @app.resource
-async def enrich_person_data(update_schema: PartialPerson) -> Person:
-    """Enrich the data for a person using a lot of data."""
-    LOG.info(f"params: {update_schema}")
-    update_body = map_obj_to_db(update_schema)
-    try:
-        # Update the user record with the provided schema
-        supabase.table("scraped_users").update(update_body).eq(
-            "id", update_body["id"]
-        ).execute()
-        LOG.info(f"Updated person {update_schema.id}")
-    except Exception as e:
-        LOG.error(f"Error updating person {update_schema.id}: {e}")
-        raise e
+async def reviewConversation(conversation_group_id: int) -> ConversationGroup:
+    """Review the entire conversation so far"""
+    conversation_group = (
+        supabase.table("user_conversations_groups")
+        .select("*")
+        .eq("id", conversation_group_id)
+        .execute()
+        .data[0]
+    )
+    LOG.info(f"Conversation group: {conversation_group}")
+    return map_db_to_obj_conversation_group(conversation_group)
 
-    return None
+
+@app.resource
+async def addConversationAnalysis(
+    conversation_group_id: int, summary: str, suggested_topic: str
+) -> Conversation:
+    """Take the conversation snippet transcript and record it by adding a conversation snippet and suggested conversation starters."""
+
+    LOG.info(f"Adding conversation analysis: {summary} {suggested_topic}")
+
+    conversation = (
+        supabase.table("conversations")
+        .insert(
+            {
+                "conversation_group_id": conversation_group_id,
+                "summary": summary,
+                "next_convo_topic": suggested_topic,
+            }
+        )
+        .execute()
+        .data[0]
+    )
+
+    return map_db_to_obj_conversation(conversation)
+
+
+@ConversationGroup.conversations.resolver
+async def getConversationsInGroup(
+    conversation_group_id: int,
+) -> list[Conversation]:
+    """Get the conversations for a conversation group."""
+    conversations = (
+        supabase.table("conversations")
+        .select("*")
+        .eq("conversation_group_id", conversation_group_id)
+        .execute()
+        .data
+    )
+    LOG.info(f"Conversations: {conversations}")
+    return [map_db_to_obj_conversation(conversation) for conversation in conversations]
+
+
+# @app.resource
+# async def enrich_person_data(update_schema: PartialPerson) -> Person:
+#     """Enrich the data for a person using a lot of data."""
+#     LOG.info(f"params: {update_schema}")
+#     update_body = map_obj_to_db(update_schema)
+#     try:
+#         # Update the user record with the provided schema
+#         supabase.table("scraped_users").update(update_body).eq(
+#             "id", update_body["id"]
+#         ).execute()
+#         LOG.info(f"Updated person {update_schema.id}")
+#     except Exception as e:
+#         LOG.error(f"Error updating person {update_schema.id}: {e}")
+#         raise e
+
+#     return None
 
 
 # Define relationship resolvers
