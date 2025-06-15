@@ -10,6 +10,8 @@ import {
   getAllUsers,
   getUserById,
   updateUserById,
+  processUser,
+  onboardUser,
 } from "../controllers/users.js";
 
 import {
@@ -26,6 +28,10 @@ export default function routes(app) {
   app.get("/api/event", getAllEvents);
   app.get("/api/event/:id", getEventById);
   app.post("/api/event/:id/join", joinEvent);
+  
+  // Onboarding for linkedin , resume, and interests
+  app.post("/api/user/onboard", onboardUser);
+  app.post("/api/user/process", processUser);
 
 
   // User routes
