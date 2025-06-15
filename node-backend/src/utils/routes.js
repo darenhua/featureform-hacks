@@ -41,7 +41,7 @@ export default function routes(app) {
 
   // User and Event routes
   app.get("/api/:eventId/users", getUsersForEvent);
-  app.post("/api/:eventId/:userId", addUserToEvent); // <-- add this route
+  app.post("/api/:eventId/:userIdfv", addUserToEvent); // <-- add this route
   app.post("/api/user/find_similar_users", findSimilarUsers);
 
   // app.post("/api/user_event", createUserEvent);

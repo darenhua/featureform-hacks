@@ -52,18 +52,6 @@ export async function addUserToEvent(req, res) {
         .json({ error: "eventId and userIdfv are required" });
     }
 
-    // Look for an existing user with this idfv
-    const { data: user, error: userError } = await supabase
-      .from("user")
-      .select("id")
-      .eq("idfv", userIdfv)
-      .single();
-
-    if (userError || !user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    const userId = user.id;
-
     // Fetch the event
     const { data: event, error: eventError } = await supabase
       .from("event")
@@ -77,12 +65,12 @@ export async function addUserToEvent(req, res) {
 
     // Merge userId into users array, avoiding duplicates
     const currentUsers = Array.isArray(event.users) ? event.users : [];
-    if (currentUsers.includes(userId)) {
+    if (currentUsers.includes(userIdfv)) {
       return res
         .status(200)
         .json({ message: "User already added to event", users: currentUsers });
     }
-    const updatedUsers = [...currentUsers, userId];
+    const updatedUsers = [...currentUsers, userIdfv];
 
     // Update the event's users array
     const { data, error } = await supabase
