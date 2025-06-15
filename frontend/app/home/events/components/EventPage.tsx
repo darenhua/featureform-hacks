@@ -97,6 +97,7 @@ export default function EventPage({ event, isLoading, error }: EventPageProps) {
                   interests={person.interests}
                   colorIndex={index}
                   userId={person.userId}
+                  eventId={event.id}
                 />
               </View>
             ))}

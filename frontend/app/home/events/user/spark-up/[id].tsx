@@ -5,40 +5,65 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   Alert,
-  ActivityIndicator 
+  ActivityIndicator,
+  ScrollView 
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Audio } from 'expo-av';
 import { COLORS, FONTS } from "../../../../styles/global";
 import { mockPeople } from "../../../mock-people";
+import axios from "axios";
+import Constants from "expo-constants";
+import { getVendorId } from "../../../../../helper";
 
 interface ConversationResponse {
   summary?: string;
-  suggestions?: string[];
+  nextTopics?: string[];
 }
 
+interface ConversationBubble {
+  id: number;
+  summary: string;
+  nextTopics: string[];
+}
+
+const NODE_URL = Constants.expoConfig?.extra?.NODE_URL;
+
 export default function SparkUpConversationPage() {
-  const { id } = useLocalSearchParams();
+  const { id, eventId } = useLocalSearchParams();
   const router = useRouter();
   
   const [isRecording, setIsRecording] = useState(false);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
-  const [currentResponse, setCurrentResponse] = useState<ConversationResponse | null>(null);
-  const [topicCount, setTopicCount] = useState(0);
+  const [conversationBubbles, setConversationBubbles] = useState<ConversationBubble[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const [currentUserIdfv, setCurrentUserIdfv] = useState<string | null>(null);
   
-  const user = mockPeople.find(person => person.userId === id);
   let durationInterval: NodeJS.Timeout;
 
   useEffect(() => {
     setupAudio();
+    fetchUser();
+    getCurrentUserIdfv();
     return () => {
       if (recording) {
         recording.stopAndUnloadAsync();
       }
     };
   }, []);
+
+  const getCurrentUserIdfv = async () => {
+    try {
+      const idfv = await getVendorId();
+      setCurrentUserIdfv(idfv);
+      console.log('Current user IDFV:', idfv);
+    } catch (error) {
+      console.error('Failed to get current user IDFV:', error);
+    }
+  };
 
   const setupAudio = async () => {
     try {
@@ -59,6 +84,71 @@ export default function SparkUpConversationPage() {
     }
   };
 
+  const fetchUser = async () => {
+    setUserLoading(true);
+    try {
+      // First try to get from backend API
+      const response = await axios.get(`${NODE_URL}/user/${id}`);
+      setUser(response.data.user);
+    } catch (error) {
+      // Fallback to mock data
+      console.log('API failed, using mock data for spark-up user:', id);
+      const mockUser = mockPeople.find(person => person.userId === id || person.id === id);
+      if (mockUser) {
+        setUser({
+          id: mockUser.id,
+          userId: mockUser.userId,
+          name: mockUser.name,
+          firstName: mockUser.name.split(' ')[0],
+          lastName: mockUser.name.split(' ').slice(1).join(' '),
+          image: mockUser.image,
+          bio: mockUser.bio,
+          interests: mockUser.interests,
+          workHistory: mockUser.workHistory
+        });
+      } else {
+        setUser(null);
+      }
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
+  const sendTranscriptionToEndpoint = async (transcription: string) => {
+    try {
+      // Use actual IDs from context
+      const payload = {
+        person1Idfv: currentUserIdfv || "unknown-current-user",
+        person2Idfv: user?.userId || user?.id || user?.idfv || "unknown-other-user",
+        eventId: eventId || "unknown-event-id",
+        transcription: transcription
+      };
+      
+      console.log('Sending transcription to endpoint:');
+      console.log('====================================');
+      console.log(JSON.stringify(payload, null, 2));
+      console.log('====================================');
+      
+      // TODO: Uncomment when endpoint is ready
+      // const response = await axios.post(`${NODE_URL}/api/conversation/transcription`, payload);
+      // return response.data;
+      
+      // Mock response for now
+      return {
+        summary: transcription, // Show full transcription as summary
+        nextTopics: [
+          "Tell me more about your experience with that",
+          "What challenges did you face?",
+          "How did that make you feel?"
+        ]
+      };
+      
+    } catch (error) {
+      console.error('Error sending transcription:', error);
+      throw error;
+    }
+  };
+
   const startRecording = async () => {
     try {
       const { recording } = await Audio.Recording.createAsync(
@@ -68,14 +158,13 @@ export default function SparkUpConversationPage() {
       setRecording(recording);
       setIsRecording(true);
       setRecordingDuration(0);
-      setCurrentResponse(null);
       
       // Start duration timer
       durationInterval = setInterval(() => {
         setRecordingDuration(prev => prev + 1);
       }, 1000);
       
-      console.log('🎙️ Recording started for new topic');
+      console.log('Recording started');
       
     } catch (error) {
       console.error('Failed to start recording:', error);
@@ -95,11 +184,10 @@ export default function SparkUpConversationPage() {
       const uri = recording.getURI();
       
       if (uri) {
-        console.log(`🎯 Topic ${topicCount + 1} recorded (${formatDuration(recordingDuration)})`);
+        console.log(`Recording completed (${formatDuration(recordingDuration)})`);
         
         // Send to backend for transcription
         await transcribeAndProcess(uri);
-        setTopicCount(prev => prev + 1);
       }
       
       setRecording(null);
@@ -136,45 +224,40 @@ export default function SparkUpConversationPage() {
       const transcriptionResult = await transcriptionResponse.json();
       const transcribedText = transcriptionResult.text || '';
       
-      console.log('📝 TRANSCRIBED TEXT:');
+      console.log('TRANSCRIBED TEXT:');
       console.log('==================');
       console.log(transcribedText);
       console.log('==================');
       
-      // Generate response and suggestions
-      await generateConversationResponse(transcribedText);
+      // Send transcription to endpoint and get response
+      const response = await sendTranscriptionToEndpoint(transcribedText);
+      
+      // Add new conversation bubble
+      const newBubble: ConversationBubble = {
+        id: Date.now(),
+        summary: response.summary || 'Conversation recorded',
+        nextTopics: response.nextTopics || []
+      };
+      
+      setConversationBubbles(prev => [...prev, newBubble]);
       
     } catch (error) {
       console.error('Transcription error:', error);
       
       // Fallback: simulate transcription for demo
-      const simulatedText = `This is a simulated transcription for topic ${topicCount + 1}. In a real implementation, this would be the actual transcribed speech from Whisper API.`;
-      console.log('📝 SIMULATED TRANSCRIPTION:');
+      const simulatedText = `This is a simulated transcription. In a real implementation, this would be the actual transcribed speech from Whisper API.`;
+      console.log('SIMULATED TRANSCRIPTION:');
       console.log(simulatedText);
       
-      await generateConversationResponse(simulatedText);
-    }
-  };
-
-  const generateConversationResponse = async (transcribedText: string) => {
-    try {
-      // Generate summary and suggestions based on transcribed text
-      const summary = `Topic ${topicCount + 1}: ${transcribedText.substring(0, 100)}${transcribedText.length > 100 ? '...' : ''}`;
+      const response = await sendTranscriptionToEndpoint(simulatedText);
       
-      const suggestions = [
-        "Tell me more about your experience with that",
-        "What challenges did you face?", 
-        "How did that make you feel?",
-        "What would you do differently next time?"
-      ];
+      const newBubble: ConversationBubble = {
+        id: Date.now(),
+        summary: response.summary || 'Conversation recorded',
+        nextTopics: response.nextTopics || []
+      };
       
-      setCurrentResponse({
-        summary,
-        suggestions: suggestions.slice(0, 2) // Show 2 suggestions
-      });
-      
-    } catch (error) {
-      console.error('Error generating response:', error);
+      setConversationBubbles(prev => [...prev, newBubble]);
     }
   };
 
@@ -183,6 +266,17 @@ export default function SparkUpConversationPage() {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  if (userLoading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <ActivityIndicator size="large" color={COLORS.maintext} />
+          <Text style={styles.errorText}>Loading user...</Text>
+        </View>
+      </View>
+    );
+  }
 
   if (!user) {
     return (
@@ -199,24 +293,40 @@ export default function SparkUpConversationPage() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Spark with {user.name}</Text>
+        <Text style={styles.headerTitle}>Conversation with {user.name || `${user.firstName} ${user.lastName}`}</Text>
       </View>
 
       {/* Main Content */}
       <View style={styles.content}>
         
-        {/* Topic Counter */}
-        <View style={styles.topicCounter}>
-          <Text style={styles.topicText}>Topic {topicCount + 1}</Text>
+        {/* Conversation Bubbles */}
+        <ScrollView style={styles.conversationArea} showsVerticalScrollIndicator={false}>
+          {conversationBubbles.map((bubble) => (
+            <View key={bubble.id} style={styles.conversationBubble}>
+              <Text style={styles.summaryText}>{bubble.summary}</Text>
+              
+              {bubble.nextTopics.length > 0 && (
+                <View style={styles.topicsContainer}>
+                  <Text style={styles.topicsTitle}>Next conversation topics:</Text>
+                  {bubble.nextTopics.map((topic, index) => (
+                    <Text key={index} style={styles.topicText}>
+                      {topic}
+                    </Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          ))}
+        </ScrollView>
+
+        {/* Recording Section */}
+        <View style={styles.recordingSection}>
           {isRecording && (
             <Text style={styles.durationText}>{formatDuration(recordingDuration)}</Text>
           )}
-        </View>
-
-        {/* Recording Button */}
-        <View style={styles.recordingSection}>
+          
           <TouchableOpacity
             style={[
               styles.recordButton,
@@ -240,43 +350,10 @@ export default function SparkUpConversationPage() {
               ? 'Recording... Tap to stop and transcribe'
               : isProcessing
                 ? 'Processing your recording...'
-                : 'Tap to record a conversation topic'
+                : 'Tap to record a conversation'
             }
           </Text>
         </View>
-
-        {/* Response Section */}
-        {currentResponse && (
-          <View style={styles.responseSection}>
-            <Text style={styles.responseTitle}>💬 AI Response</Text>
-            
-            {currentResponse.summary && (
-              <View style={styles.summaryBox}>
-                <Text style={styles.summaryText}>{currentResponse.summary}</Text>
-              </View>
-            )}
-            
-            {currentResponse.suggestions && (
-              <View style={styles.suggestionsBox}>
-                <Text style={styles.suggestionsTitle}>💡 Conversation Starters:</Text>
-                {currentResponse.suggestions.map((suggestion, index) => (
-                  <Text key={index} style={styles.suggestionText}>
-                    • {suggestion}
-                  </Text>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Topics Completed */}
-        {topicCount > 0 && (
-          <View style={styles.progressSection}>
-            <Text style={styles.progressText}>
-              {topicCount} topic{topicCount !== 1 ? 's' : ''} recorded
-            </Text>
-          </View>
-        )}
       </View>
     </View>
   );
@@ -306,38 +383,65 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: FONTS.bold,
     color: COLORS.maintext,
+    flex: 1,
   },
   content: {
     flex: 1,
     paddingHorizontal: 28,
-    paddingTop: 40,
   },
-  topicCounter: {
-    alignItems: 'center',
-    marginBottom: 40,
+  conversationArea: {
+    flex: 1,
+    paddingTop: 20,
+    marginBottom: 20,
+  },
+  conversationBubble: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+  },
+  summaryText: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.maintext,
+    lineHeight: 24,
+    marginBottom: 12,
+  },
+  topicsContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 12,
+    padding: 16,
+  },
+  topicsTitle: {
+    fontSize: 14,
+    fontFamily: FONTS.bold,
+    color: COLORS.accent,
+    marginBottom: 8,
   },
   topicText: {
-    fontSize: 24,
-    fontFamily: FONTS.bold,
-    color: COLORS.maintext,
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: COLORS.subtext,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  recordingSection: {
+    alignItems: 'center',
+    paddingBottom: 40,
   },
   durationText: {
     fontSize: 18,
     fontFamily: FONTS.medium,
     color: COLORS.accent,
-    marginTop: 8,
-  },
-  recordingSection: {
-    alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 16,
   },
   recordButton: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
     backgroundColor: COLORS.accent,
     justifyContent: 'center',
     alignItems: 'center',
@@ -354,69 +458,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   recordButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: FONTS.bold,
     color: COLORS.background,
     textAlign: 'center',
   },
   instructionText: {
-    fontSize: 16,
-    fontFamily: FONTS.medium,
-    color: COLORS.subtext,
-    textAlign: 'center',
-    marginTop: 20,
-    paddingHorizontal: 20,
-  },
-  responseSection: {
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-  },
-  responseTitle: {
-    fontSize: 18,
-    fontFamily: FONTS.bold,
-    color: COLORS.accent,
-    marginBottom: 16,
-  },
-  summaryBox: {
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  summaryText: {
-    fontSize: 15,
-    fontFamily: FONTS.regular,
-    color: COLORS.maintext,
-    lineHeight: 22,
-  },
-  suggestionsBox: {
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
-    borderRadius: 12,
-    padding: 16,
-  },
-  suggestionsTitle: {
-    fontSize: 16,
-    fontFamily: FONTS.bold,
-    color: COLORS.accent,
-    marginBottom: 12,
-  },
-  suggestionText: {
-    fontSize: 15,
-    fontFamily: FONTS.regular,
-    color: COLORS.maintext,
-    lineHeight: 22,
-    marginBottom: 8,
-  },
-  progressSection: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  progressText: {
     fontSize: 14,
     fontFamily: FONTS.medium,
     color: COLORS.subtext,
+    textAlign: 'center',
+    marginTop: 16,
+    paddingHorizontal: 20,
   },
   errorContainer: {
     flex: 1,

@@ -4,11 +4,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { COLORS, FONTS } from "../../../styles/global";
 import axios from "axios";
 import Constants from "expo-constants";
+import { mockPeople } from "../../mock-people";
 
 const NODE_URL = Constants.expoConfig?.extra?.NODE_URL;
 
 export default function UserProfilePage() {
-  const { id } = useLocalSearchParams();
+  const { id, eventId } = useLocalSearchParams();
   const router = useRouter();
 
   const [user, setUser] = useState<any>(null);
@@ -16,12 +17,33 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     setLoading(true);
+    
+    // First try to get from backend API
     axios
       .get(`${NODE_URL}/user/${id}`)
       .then((response) => {
-        setUser(response.data.user)
+        setUser(response.data.user);
       })
-      .catch(() => setUser(null))
+      .catch(() => {
+        // Fallback to mock data if API fails
+        console.log('API failed, using mock data for user:', id);
+        const mockUser = mockPeople.find(person => person.id === id || person.userId === id);
+        if (mockUser) {
+          // Transform mock user to match expected format
+          setUser({
+            id: mockUser.id,
+            userId: mockUser.userId,
+            firstName: mockUser.name.split(' ')[0],
+            lastName: mockUser.name.split(' ').slice(1).join(' '),
+            image: mockUser.image,
+            bio: mockUser.bio,
+            interests: mockUser.interests,
+            workHistory: mockUser.workHistory
+          });
+        } else {
+          setUser(null);
+        }
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -44,7 +66,12 @@ export default function UserProfilePage() {
   }
 
   const handleSparkUp = () => {
-    router.push(`/home/events/user/spark-up/${user.id}` as any);
+    // Use userId for spark-up navigation (matches mock data structure)
+    const sparkId = user.userId || user.id;
+    const url = eventId 
+      ? `/home/events/user/spark-up/${sparkId}?eventId=${eventId}`
+      : `/home/events/user/spark-up/${sparkId}`;
+    router.push(url as any);
   };
 
   const handleBack = () => {

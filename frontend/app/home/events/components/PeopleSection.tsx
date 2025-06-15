@@ -85,6 +85,7 @@ export default function PeopleSection({
               image="https://randomuser.me/api/portraits/men/7.jpg"
               title={person.headline}
               userId={person.id}
+              eventId={eventId}
             />
           </View>
         ))}

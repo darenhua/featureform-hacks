@@ -128,6 +128,84 @@ export const mockPeople = [
         description: "Built scalable web applications using React, Node.js, and cloud technologies"
       }
     ]
+  },
+  {
+    id: "6",
+    userId: "lisa-wang",
+    name: "Lisa Wang",
+    image: "https://randomuser.me/api/portraits/women/8.jpg",
+    interests: [
+      "Serial entrepreneur",
+      "E-commerce expert",
+      "Building scalable businesses"
+    ],
+    bio: "Serial entrepreneur with multiple successful exits. Currently building the next generation of e-commerce platforms.",
+    workHistory: [
+      {
+        title: "CEO & Founder",
+        company: "NextGen Commerce",
+        duration: "2022 - Present",
+        description: "Building AI-powered e-commerce solutions for small businesses"
+      },
+      {
+        title: "Co-founder",
+        company: "ShopTech Solutions",
+        duration: "2018 - 2022",
+        description: "Co-founded and scaled e-commerce platform to $10M ARR before acquisition"
+      }
+    ]
+  },
+  {
+    id: "7",
+    userId: "alex-thompson",
+    name: "Alex Thompson",
+    image: "https://randomuser.me/api/portraits/men/9.jpg",
+    interests: [
+      "E-commerce pioneer",
+      "Digital marketing expert",
+      "Growth hacking specialist"
+    ],
+    bio: "E-commerce pioneer and digital marketing expert with 10+ years of experience scaling online businesses.",
+    workHistory: [
+      {
+        title: "VP of Growth",
+        company: "E-commerce Giant",
+        duration: "2020 - Present",
+        description: "Leading growth initiatives and digital marketing strategies for major e-commerce platform"
+      },
+      {
+        title: "Marketing Director",
+        company: "Startup Accelerator",
+        duration: "2017 - 2020",
+        description: "Helped 50+ startups scale their marketing and achieve product-market fit"
+      }
+    ]
+  },
+  {
+    id: "8",
+    userId: "maya-patel",
+    name: "Maya Patel",
+    image: "https://randomuser.me/api/portraits/women/10.jpg",
+    interests: [
+      "Tech startup advisor",
+      "Venture capital expert",
+      "Mentoring entrepreneurs"
+    ],
+    bio: "Tech startup advisor and former VC with extensive experience in early-stage investments and startup mentoring.",
+    workHistory: [
+      {
+        title: "Senior Advisor",
+        company: "TechStars",
+        duration: "2021 - Present",
+        description: "Advising early-stage startups on product development, fundraising, and go-to-market strategies"
+      },
+      {
+        title: "Principal",
+        company: "Innovation Ventures",
+        duration: "2018 - 2021",
+        description: "Led investments in 20+ early-stage tech startups with focus on AI and fintech"
+      }
+    ]
   }
 ];
 
