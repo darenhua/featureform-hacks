@@ -16,11 +16,12 @@ import {
 export default function routes(app) {
   app.get("/", (req, res) => res.status(200).send("200 OK"));
 
+  // force change
   // Event routes
   app.post("/api/event", createEvent);
   app.get("/api/event", getAllEvents);
   app.get("/api/event/:id", getEventById);
-  
+
   app.delete("/api/event/:id", deleteEventById);
 
   // User routes
