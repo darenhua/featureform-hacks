@@ -73,26 +73,6 @@ export async function getUserById(req, res) {
   }
 }
 
-// Delete a user by id
-export async function deleteUserById(req, res) {
-  try {
-    const { id } = req.params;
-    const { data, error } = await supabase
-      .from("user")
-      .delete()
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error || !data) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    return res.status(200).json({ message: "User deleted", user: data });
-  } catch (error) {
-    return res.status(500).json({ error: "Server error" });
-  }
-}
-
 // Update a user by id
 export async function updateUserById(req, res) {
   try {

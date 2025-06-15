@@ -7,6 +7,7 @@ const onboarding = async (data: any) => {
   const response = await axios.get(
     `${Constants.expoConfig?.extra?.NODE_URL}/users`
   );
+
   console.log("Onboarding response:", response.data);
   return response.data;
 };
