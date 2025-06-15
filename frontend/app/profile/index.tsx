@@ -1,14 +1,32 @@
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
+import { COLORS, FONTS } from "../styles/global";
 
 export default function Profile() {
+  const router = useRouter();
+
+  const handleAddEvent = () => {
+    router.push("/profile/add-event");
+  };
+
+  const handlePastSparks = () => {
+    router.push("/profile/past-sparks");
+  };
+
   return (
     <View style={styles.container}>
       <Image
-        source={{ uri: "https://randomuser.me/api/portraits/men/1.jpg" }}
+        source={require("../../assets/images/mock/gene.png")}
         style={styles.profileImage}
       />
-      <Text style={styles.name}>John Doe</Text>
-      <Text style={styles.info}>john.doe@email.com</Text>
+      <Text style={styles.name}>Gene Park</Text>
+      
+      <TouchableOpacity style={styles.addEventButton} onPress={handleAddEvent}>
+        <Text style={styles.addEventText}>Add Event</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.addEventButton} onPress={handlePastSparks}>
+        <Text style={styles.addEventText}>Past Sparks</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -16,7 +34,7 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#162955',
+    backgroundColor: COLORS.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -27,13 +45,27 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   name: {
-    color: '#fff',
+    color: COLORS.maintext,
     fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontFamily: FONTS.bold,
+    marginBottom: 32,
   },
-  info: {
-    color: '#fff',
-    fontSize: 16,
+  addEventButton: {
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 20,
+    marginTop: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  addEventText: {
+    color: COLORS.maintext,
+    fontSize: 18,
+    fontFamily: FONTS.bold,
+    textAlign: 'center',
   },
 }); 
