@@ -16,10 +16,10 @@ export default function Index() {
     const create_user = async () => {
       const idfv = await getVendorId();
       axios
-        .post(`${NODE_URL}/user`, {
-          idfv
+        .post(`${NODE_URL}/user`, { idfv })
+        .then((response) => {
+          // console.log(response.data)
         })
-        .then((response) => console.log(response.data))
         .catch((error) => console.error("Error fetching data:", error));
     };
 

@@ -12,6 +12,11 @@ import {
   updateUserById,
 } from "../controllers/users.js";
 
+import {
+  createUserEvent,
+  getUsersForEvent,
+} from "../controllers/user_and_event.js";
+
 export default function routes(app) {
   app.get("/", (req, res) => res.status(200).send("200 OK"));
 
@@ -28,6 +33,9 @@ export default function routes(app) {
   app.get("/api/user/:id", getUserById);
   app.get("/api/users", getAllUsers);
   app.put("/api/user/:id", updateUserById);
+
+  app.post("/api/user_event", createUserEvent);
+  app.get("/api/user_event/:eventId", getUsersForEvent);
 
   app.get("/", (req, res) => res.status(200).send("foo OK"));
 }
