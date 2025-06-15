@@ -5,7 +5,8 @@ import { COLORS, FONTS } from "../styles/global";
 import EventCard from "../../components/EventCard";
 import ProfileButton from "../../components/ProfileButton";
 import FloatingCamButton from "../../components/FloatingCamButton";
-import { getAllEvents, Event } from "../api/events";
+import { getAllEvents, joinEvent, Event } from "../api/events";
+import { getVendorId } from "../../helper";
 
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -16,6 +17,7 @@ export default function Home() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        //Fetch all events and set them to the events state
         const response = await getAllEvents();
         setEvents(response.events || []);
       } catch (err) {
@@ -29,7 +31,24 @@ export default function Home() {
     fetchEvents();
   }, []);
 
-  const handleEventPress = (eventId: string) => {
+  const handleEventPress = async (eventId: string) => {
+    try {
+      // Get the vendor ID from the device --> This is out way of identifying the user
+      const vendorId = await getVendorId();
+      
+      if (vendorId) {
+        // Join the event by adding user to the users array
+        await joinEvent(eventId, vendorId);
+        console.log('User joined event:', eventId);
+      } else {
+        console.warn('Could not get vendor ID');
+      }
+    } catch (error) {
+      console.error('Error joining event:', error);
+      // Continue to navigate even if join fails
+    }
+    
+    // Navigate to the event page
     console.log('Navigating to event:', eventId);
     router.push(`/home/events/${eventId}` as any);
   };
@@ -122,7 +141,6 @@ const styles = StyleSheet.create({
   },
   logo: {
     fontSize: 20,
-    fontWeight: "700",
     fontFamily: FONTS.extraBold,
     color: COLORS.accent,
   },

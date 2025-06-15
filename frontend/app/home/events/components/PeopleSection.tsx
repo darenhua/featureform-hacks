@@ -13,7 +13,18 @@ interface PeopleSectionProps {
 }
 
 export default function PeopleSection({ title, categories }: PeopleSectionProps) {
-  let globalColorIndex = 0;
+  const getCategoryColor = (categoryName: string) => {
+    switch (categoryName) {
+      case "Entrepreneurship":
+        return `#${COLORS.darkOrange}`;
+      case "Artificial Intelligence":
+        return `#${COLORS.darkBlue}`;
+      case "Product Design":
+        return `#${COLORS.darkGreen}`;
+      default:
+        return `#${COLORS.darkYellow}`;
+    }
+  };
 
   return (
     <View style={styles.peopleSection}>
@@ -21,28 +32,31 @@ export default function PeopleSection({ title, categories }: PeopleSectionProps)
       
       {categories.map((category, index) => (
         <View key={index} style={styles.categoryContainer}>
-          <Text style={styles.categoryTitle}>{category.name}</Text>
+          <View style={styles.categoryHeader}>
+            <Text style={styles.categoryTitle}>{category.name}</Text>
+            <View 
+              style={[
+                styles.categoryAccent, 
+                { backgroundColor: getCategoryColor(category.name) }
+              ]} 
+            />
+          </View>
           <ScrollView 
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.peopleScrollContent}
             style={styles.peopleScrollContainer}
           >
-            {mockPeopleByCategory[category.name as keyof typeof mockPeopleByCategory]?.map((person) => {
-              const colorIndex = globalColorIndex;
-              globalColorIndex++;
-              return (
-                <View key={person.id} style={styles.compactCardWrapper}>
-                  <CompactProfileCard 
-                    name={person.name}
-                    image={person.image}
-                    title={person.title}
-                    colorIndex={colorIndex}
-                    userId={person.userId}
-                  />
-                </View>
-              );
-            })}
+            {mockPeopleByCategory[category.name as keyof typeof mockPeopleByCategory]?.map((person) => (
+              <View key={person.id} style={styles.compactCardWrapper}>
+                <CompactProfileCard 
+                  name={person.name}
+                  image={person.image}
+                  title={person.title}
+                  userId={person.userId}
+                />
+              </View>
+            ))}
           </ScrollView>
         </View>
       ))}
@@ -64,12 +78,20 @@ const styles = StyleSheet.create({
   categoryContainer: {
     marginBottom: 24,
   },
+  categoryHeader: {
+    paddingHorizontal: 28,
+    marginBottom: 16,
+  },
   categoryTitle: {
     fontSize: 18,
     fontFamily: FONTS.medium,
     color: COLORS.subtext,
-    marginBottom: 16,
-    paddingHorizontal: 28,
+    marginBottom: 8,
+  },
+  categoryAccent: {
+    height: 3,
+    width: 80,
+    borderRadius: 2,
   },
   peopleScrollContainer: {
     paddingLeft: 28,

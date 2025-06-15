@@ -45,7 +45,7 @@ export default function UserProfilePage() {
       >
         {/* Profile Section */}
         <View style={styles.profileSection}>
-          <Image source={user.image} style={styles.profileImage} />
+          <Image source={{ uri: user.image }} style={styles.profileImage} />
           <View style={styles.profileInfo}>
             <Text style={styles.userName}>{user.name}</Text>
             <Text style={styles.userBio}>{user.bio}</Text>

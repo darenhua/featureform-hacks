@@ -1,27 +1,45 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { COLORS, FONTS } from "../../../styles/global";
 import EventPageHeader from "./EventPageHeader";
 import EventCard from "./EventCard";
 import ProfileCard from "./ProfileCard";
 import PeopleSection from "./PeopleSection";
 import { mockPeople } from "../../mock-people";
-
-interface Event {
-  id: string;
-  name: string;
-  image: any;
-  description?: string;
-  location?: string;
-  date?: string;
-  time?: string;
-}
+import { Event } from "../../../api/events";
 
 interface EventPageProps {
   event?: Event;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
-export default function EventPage({ event }: EventPageProps) {
+export default function EventPage({ event, isLoading, error }: EventPageProps) {
+  // Loading state
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <EventPageHeader />
+        <View style={styles.errorContainer}>
+          <ActivityIndicator size="large" color={COLORS.accent} />
+        </View>
+      </View>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <EventPageHeader />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error</Text>
+          <Text style={styles.errorSubtext}>{error}</Text>
+        </View>
+      </View>
+    );
+  }
+
   // If event not found, show error state
   if (!event) {
     return (
@@ -38,8 +56,9 @@ export default function EventPage({ event }: EventPageProps) {
   }
 
   const peopleCategories = [
-    { name: "Entrepreneurship", count: 3 },
-    { name: "Artificial Intelligence", count: 3 }
+    { name: "Entrepreneurship", count: 4 },
+    { name: "Artificial Intelligence", count: 4 },
+    { name: "Product Design", count: 4 }
   ];
 
   return (
@@ -54,7 +73,7 @@ export default function EventPage({ event }: EventPageProps) {
         {/* Event Card */}
         <EventCard 
           name={event.name}
-          image={event.image}
+          image={event.image_url ? { uri: event.image_url } : require("../../../../assets/images/mock/black.png")}
           description={event.description}
           location={event.location}
           date={event.date}

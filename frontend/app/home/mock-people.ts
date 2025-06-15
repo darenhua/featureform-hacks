@@ -3,7 +3,7 @@ export const mockPeople = [
     id: "1",
     userId: "gene-park",
     name: "Gene Park",
-    image: require("../../assets/images/mock/gene.png"),
+    image: "https://randomuser.me/api/portraits/men/2.jpg",
     interests: [
       "Made a project on music and sports",
       "Interested in Entrepreneurship", 
@@ -29,7 +29,7 @@ export const mockPeople = [
     id: "2",
     userId: "sarah-chen", 
     name: "Sarah Chen",
-    image: require("../../assets/images/mock/gene.png"),
+    image: "https://randomuser.me/api/portraits/women/3.jpg",
     interests: [
       "AI/ML Engineer at Google",
       "Passionate about deep learning",
@@ -55,7 +55,7 @@ export const mockPeople = [
     id: "3",
     userId: "marcus-johnson",
     name: "Marcus Johnson", 
-    image: require("../../assets/images/mock/gene.png"),
+    image: "https://randomuser.me/api/portraits/men/4.jpg",
     interests: [
       "Startup founder & CEO",
       "Tech entrepreneur for 8+ years",
@@ -81,7 +81,7 @@ export const mockPeople = [
     id: "4",
     userId: "emily-rodriguez",
     name: "Emily Rodriguez",
-    image: require("../../assets/images/mock/gene.png"),
+    image: "https://randomuser.me/api/portraits/women/5.jpg",
     interests: [
       "Product designer at Meta",
       "UX/UI design enthusiast", 
@@ -107,7 +107,7 @@ export const mockPeople = [
     id: "5",
     userId: "david-kim",
     name: "David Kim",
-    image: require("../../assets/images/mock/gene.png"),
+    image: "https://randomuser.me/api/portraits/men/6.jpg",
     interests: [
       "Full-stack developer",
       "Open source contributor",
@@ -137,28 +137,28 @@ export const mockPeopleByCategory = {
       id: "ent1",
       userId: "marcus-johnson",
       name: "Marcus Johnson",
-      image: require("../../assets/images/mock/gene.png"),
+      image: "https://randomuser.me/api/portraits/men/7.jpg",
       title: "Startup Founder & CEO"
     },
     {
       id: "ent2",
       userId: "lisa-wang", 
       name: "Lisa Wang",
-      image: require("../../assets/images/mock/gene.png"),
+      image: "https://randomuser.me/api/portraits/women/8.jpg",
       title: "Serial Entrepreneur"
     },
     {
       id: "ent3",
       userId: "alex-thompson",
       name: "Alex Thompson",
-      image: require("../../assets/images/mock/gene.png"),
+      image: "https://randomuser.me/api/portraits/men/9.jpg",
       title: "E-commerce Pioneer"
     },
     {
       id: "ent4",
       userId: "maya-patel",
       name: "Maya Patel",
-      image: require("../../assets/images/mock/gene.png"), 
+      image: "https://randomuser.me/api/portraits/women/10.jpg", 
       title: "Tech Startup Advisor"
     }
   ],
@@ -167,29 +167,59 @@ export const mockPeopleByCategory = {
       id: "ai1",
       userId: "sarah-chen",
       name: "Sarah Chen",
-      image: require("../../assets/images/mock/gene.png"),
+      image: "https://randomuser.me/api/portraits/women/11.jpg",
       title: "AI/ML Engineer"
     },
     {
       id: "ai2",
       userId: "james-liu",
       name: "Dr. James Liu",
-      image: require("../../assets/images/mock/gene.png"),
+      image: "https://randomuser.me/api/portraits/men/12.jpg",
       title: "AI Research Scientist"
     },
     {
       id: "ai3",
       userId: "rachel-green", 
       name: "Rachel Green",
-      image: require("../../assets/images/mock/gene.png"),
+      image: "https://randomuser.me/api/portraits/women/13.jpg",
       title: "Machine Learning Lead"
     },
     {
       id: "ai4",
       userId: "kevin-zhang",
       name: "Kevin Zhang",
-      image: require("../../assets/images/mock/gene.png"),
+      image: "https://randomuser.me/api/portraits/men/14.jpg",
       title: "Deep Learning Expert"
+    }
+  ],
+  "Product Design": [
+    {
+      id: "pd1",
+      userId: "emily-rodriguez",
+      name: "Emily Rodriguez",
+      image: "https://randomuser.me/api/portraits/women/15.jpg",
+      title: "Senior Product Designer"
+    },
+    {
+      id: "pd2",
+      userId: "tyler-brooks",
+      name: "Tyler Brooks",
+      image: "https://randomuser.me/api/portraits/men/16.jpg",
+      title: "UX/UI Designer"
+    },
+    {
+      id: "pd3",
+      userId: "sophia-martinez",
+      name: "Sophia Martinez",
+      image: "https://randomuser.me/api/portraits/women/17.jpg",
+      title: "Design Systems Lead"
+    },
+    {
+      id: "pd4",
+      userId: "jordan-lee",
+      name: "Jordan Lee",
+      image: "https://randomuser.me/api/portraits/men/18.jpg",
+      title: "Creative Director"
     }
   ]
 }; 
