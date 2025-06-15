@@ -10,7 +10,7 @@ export async function createEvent(req, res) {
     }
 
     const { data, error } = await supabase
-      .from("events")
+      .from("event")
       .insert([{ name, date, location, description: description || "" }])
       .select()
       .single();
@@ -28,7 +28,7 @@ export async function createEvent(req, res) {
 // Retrieve all events from Supabase
 export async function getAllEvents(req, res) {
   try {
-    const { data, error } = await supabase.from("events").select("*");
+    const { data, error } = await supabase.from("event").select("*");
     if (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -43,7 +43,7 @@ export async function getEventById(req, res) {
   try {
     const { id } = req.params;
     const { data, error } = await supabase
-      .from("events")
+      .from("event")
       .select("*")
       .eq("id", id)
       .single();
@@ -62,7 +62,7 @@ export async function deleteEventById(req, res) {
   try {
     const { id } = req.params;
     const { data, error } = await supabase
-      .from("events")
+      .from("event")
       .delete()
       .eq("id", id)
       .select()

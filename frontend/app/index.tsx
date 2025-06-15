@@ -4,15 +4,20 @@ import { COLORS } from "./styles/global";
 import { useEffect } from "react";
 import axios from "axios";
 
+import * as Application from 'expo-application';
+
 export default function Index() {
   const router = useRouter();
   useEffect(() => {
+    console.log(getVendorId());
 
     axios
       // .get(`http://10.81.25.52:3000`)
       .get("https://featureform-hacks.onrender.com")
       .then((response) => console.log(response.data))
       .catch((error) => console.error("Error fetching data:", error));
+
+
   }, []);
 
   return (
@@ -55,3 +60,17 @@ const styles = StyleSheet.create({
     height: 20,
   },
 });
+
+async function getVendorId() {
+  try {
+    const idfv = await Application.getIosIdForVendorAsync();
+    if (idfv) {
+      console.log("IDFV:", idfv);
+    } else {
+      console.log("IDFV is not yet available. Try again later.");
+    }
+  } catch (error) {
+    console.error("Error getting IDFV:", error);
+  }
+}
+
