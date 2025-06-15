@@ -32,7 +32,7 @@ export default function routes(app) {
   app.put("/api/user/:id", updateUserById);
 
   app.post("/api/user_event", createUserEvent);
-  app.get("/api/user_event/:eventId", getUsersForEvent);
+  app.get("/api/:eventId/users", getUsersForEvent);
 
   app.get("/", (req, res) => res.status(200).send("foo OK"));
 }
