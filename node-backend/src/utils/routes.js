@@ -2,6 +2,7 @@ import {
   createEvent,
   getAllEvents,
   getEventById,
+  joinEvent,
 } from "../controllers/events.js";
 
 import {
@@ -24,8 +25,8 @@ export default function routes(app) {
   app.post("/api/event", createEvent);
   app.get("/api/event", getAllEvents);
   app.get("/api/event/:id", getEventById);
-  
-  app.delete("/api/event/:id", deleteEventById);
+  app.post("/api/event/:id/join", joinEvent);
+
 
   // User routes
   app.post("/api/user", createUser);
