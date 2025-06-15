@@ -67,7 +67,7 @@ export async function getAllUsers(req, res) {
 // Get a user by id
 export async function getUserById(req, res) {
   try {
-    const { idfv } = req.params;
+    const { id } = req.params;
     const { data, error } = await supabase
       .from("user")
       .select("*")
