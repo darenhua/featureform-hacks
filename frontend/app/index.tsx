@@ -6,6 +6,9 @@ import axios from "axios";
 import { getVendorId } from "../helper";
 import Constants from "expo-constants";
 
+const NODE_URL = Constants.expoConfig?.extra?.NODE_URL;
+
+
 export default function Index() {
   const router = useRouter();
 
@@ -13,7 +16,7 @@ export default function Index() {
     const create_user = async () => {
       const idfv = await getVendorId();
       axios
-        .post(`${Constants.expoConfig?.extra?.NODE_URL}/user`, {
+        .post(`${NODE_URL}/user`, {
           idfv
         })
         .then((response) => console.log(response.data))
