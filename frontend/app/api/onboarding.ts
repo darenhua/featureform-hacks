@@ -2,7 +2,7 @@ import axios from "axios";
 import Constants from "expo-constants";
 import { getVendorId } from "../../helper";
 
-const NODE_URL = Constants.expoConfig?.extra?.NODE_URL;
+const NODE_URL = "http://localhost:3000/api";
 
 export interface OnboardingData {
   linkedinURL: string;

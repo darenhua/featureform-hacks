@@ -13,7 +13,7 @@ import axios from "axios";
 import { getVendorId } from "../helper";
 import Constants from "expo-constants";
 
-const NODE_URL = Constants.expoConfig?.extra?.NODE_URL;
+const NODE_URL = "http://localhost:3000/api";
 
 export default function Index() {
     const router = useRouter();

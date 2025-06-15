@@ -8,13 +8,17 @@ interface CompactProfileCardProps {
   image: string;
   title: string;
   userId: string;
+  eventId?: string;
 }
 
-export default function CompactProfileCard({ name, image, title, userId }: CompactProfileCardProps) {
+export default function CompactProfileCard({ name, image, title, userId, eventId }: CompactProfileCardProps) {
   const router = useRouter();
 
   const handlePress = () => {
-    router.push(`/home/events/user/${userId}` as any);
+    const url = eventId 
+      ? `/home/events/user/${userId}?eventId=${eventId}`
+      : `/home/events/user/${userId}`;
+    router.push(url as any);
   };
 
   const imageSource = typeof image === 'string' ? { uri: image } : image;
